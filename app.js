@@ -1,14 +1,3 @@
-/*
-できたところ
-・@で変数に情報を追加
-・キーを押すことで配列に行動を追加出来るようにした
-
-できてないところ
-・フレームの云々
-・カメラ移動(単純に面倒でしてなかった)
-・コマンドの実行と削除
-*/
-
 class Map {
     constructor() {
         // マップの配列
@@ -151,8 +140,6 @@ function draw(){
         }
     }
 
-    // プレイヤーの入力を受け入れる
-    // →commands配列が分かんない
     if(keyIsPressed && game.commands.length===0){
         // xyの移動を配列化
         let dxy={37:[-1,0],38:[0,-1],39:[1,0],40:[0,1]}[keyCode];
@@ -166,9 +153,6 @@ function draw(){
     }
     // 実行し終わったコマンドを消す
     game.commands=game.commands.filter(c=>!c.done)
-
-    // 1フレームずつ実行、コマンド消すが良く分からん
-    // コマンドを消すということは理解、しかしdoneって何？
 
     // actorを描画
     for(let k of game.actors){
