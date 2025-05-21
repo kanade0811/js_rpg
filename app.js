@@ -79,6 +79,30 @@ class Move{
         this.biginY=-1;
         this.endX=-1;
         this.endY=-1;
+        this.frame=0;
+        // ここにthis.doneの定義もあるみたいな扱い
+    }
+
+    exec(){
+        if(this.done) return this.done;
+        this.frame++;
+        if(this.frame===1){
+            // 開始地点と終了地点の座標を計算
+            this.beginX=this.actor.x;
+            this.beginY=this.actor.y;
+            this.endX-this.actor.x+this.dx;
+            this.ednY=this.actor.y+this.dy;
+        }
+        this.actor.x=this.beginX+this.frame*this.dx/20;
+        this.actor.y=this.beginy+this.frame*this.dy/20;
+
+        return this.done;
+    }
+    /**
+     * @returns {boolean} 終了していればtrue、実行中ならfalse
+     */
+    get done(){
+        return this.frame>=20;
     }
 }
 
@@ -129,13 +153,19 @@ function draw(){
 
     // プレイヤーの入力を受け入れる
     // →commands配列が分かんない
-    if(keyIsPressed){
+    if(keyIsPressed && game.commands.length===0){
         // xyの移動を配列化
         let dxy={37:[-1,0],38:[0,-1],39:[1,0],40:[0,1]}[keyCode];
         if (dxy !== undefined){
             game.commands.push(new Move(game.player,dxy[0],dxy[1]));
         }
     }
+    // コマンドを1フレーム分実行する
+    for (let c of game.commands){
+        c.exec();
+    }
+    // 実行し終わったコマンドを消す
+    game.commands=game.commands.filter(c=>!c.done)
 
     // 1フレームずつ実行、コマンド消すが良く分からん
     // コマンドを消すということは理解、しかしdoneって何？
