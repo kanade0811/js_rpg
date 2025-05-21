@@ -1,3 +1,14 @@
+/*
+できたところ
+・@で変数に情報を追加
+・キーを押すことで配列に行動を追加出来るようにした
+
+できてないところ
+・フレームの云々
+・カメラ移動(単純に面倒でしてなかった)
+・コマンドの実行と削除
+*/
+
 class Map {
     constructor() {
         // マップの配列
@@ -55,7 +66,6 @@ class Camera {
 
 class Move{
     /**
-     * 
      * @param {Actoor} actor 移動させたいアクター
      * @param {number} dx x軸上の移動
      * @param {number} dy y軸上の移動
@@ -87,7 +97,7 @@ function setup(){
     // ゲーム状態を初期化
     game = new Game();
     // プレイヤーを作る
-    let player=new Actor(1,1,"🏃‍♂️‍➡️");
+    let player=new Actor(1,1,"🕺");
     game.player=player
 
     // 初期配置のactor
@@ -112,7 +122,7 @@ function draw(){
         for (let x=0 ; x<game.map.lenX ; x++ ){
             let tile=game.map.tileAt(x,y);
             if ( tile === 1 ){
-                text("🕺",width*x,width*y);
+                text("🌳",width*x,width*y);
             }
         }
     }
