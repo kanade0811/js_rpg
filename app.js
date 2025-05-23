@@ -27,6 +27,10 @@ class Map {
         if (x < 0 || this.lenX <= x || y < 0 || this.lenY <= y) return 1;
         return this.tiles[y * this.lenX + x];
     }
+    //指定の座標が床なのか判定する
+    isWalkabe(x,y){
+        return (this.tileAt(x,y) === 0)
+    }
 }
 
 class Actor {
@@ -55,7 +59,7 @@ class Camera {
 
 class Move {
     /**
-     * @param {Actoor} actor 移動させたいアクター
+     * @param {Actor} actor 移動させたいアクター
      * @param {number} dx x軸上の移動
      * @param {number} dy y軸上の移動
      */
@@ -81,7 +85,13 @@ class Move {
             this.beginY = this.actor.y;
             this.endX = this.actor.x + this.dx;
             this.endY = this.actor.y + this.dy;
+            //移動不可なら実行済みにして終了
+            if(!(game.map.isWalkabe(this.endX,this.endY))) {
+                this.frame =20;
+                return this.done;
+            }
         }
+
 
         // ↑で計算した座標の間を移動する
         this.actor.x = this.beginX + this.frame * this.dx / 20;
@@ -125,7 +135,7 @@ function setup() {
 function draw() {
 
     // 1マスの大きさ
-    let width = 40;
+    let width = 60;
 
     // プレイヤーの入力を受け入れる
     if (keyIsPressed && game.commands.length === 0) {
