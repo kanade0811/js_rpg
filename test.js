@@ -133,7 +133,7 @@ window.onload=function () {
 const draw= function() {
     const canvas=document.getElementById("canvas");
     const ctx=canvas.getContext("2d");
-    if(canvas.getContext){
+    if(canvas.getContext){ // 描画に関係あるところをこの中に
         // 1マスの大きさ
         let width = 60;
 
@@ -213,10 +213,10 @@ const draw= function() {
         for (let k of game.actors) {
             text(k.image, width * k.x, width * k.y)
         }
-    }else{
+    }else{ // 描画に関係ない部分をこの中に
 
     }
 
 }
 
-setInterval(draw,1/fps);
+setInterval(draw,1000/fps);
