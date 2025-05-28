@@ -1,3 +1,6 @@
+// 環境変数
+const fps=30;
+
 class Map {
     constructor() {
         // マップの配列
@@ -116,58 +119,104 @@ class Game {
 }
 let game;
 
-function setup() {
+window.onload=function () {
     // ゲーム状態を初期化
     game = new Game();
     // プレイヤーを作る
-    let player = new Actor(3, 3, "🕺");
+    let player = new Actor(3, 3);
     game.player = player;
     // 初期配置のアクター
     game.actors = [player];
-    // キャンバスを作る
-    createCanvas(480, 480);
+    // createCanvas(480, 480);
 }
 
-function draw() {
+const draw= function() {
+    const canvas=document.getElementById("canvas");
+    const ctx=canvas.getContext("2d");
+    if(canvas.getContext){
+        // 1マスの大きさ
+        let width = 60;
 
-    // 1マスの大きさ
-    let width = 60;
-    // 背景色
-    background("Bisque");
-    // カメラ位置の固定
-    textAlign(LEFT, TOP);
-    // 表示に余裕を持たせる
-    textSize(width * 7 / 8);
+        // 背景色
+        ctx.fillStyle="orange";
 
-    // プレイヤーの入力を受け入れる
-    if (keyIsPressed && game.commands.length === 0) {
-        // xyの移動を配列化
-        let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
-        if (dxy !== undefined) {
-            game.commands.push(new Move(game.player, dxy[0], dxy[1]));
-        }
-    }
+        ctx.fillRect(0,0,480,480);
 
-    // 移動の描写を繰り返させる
-    for (let c of game.commands) {
-        c.exec();
-    }
-    // 実行し終わったコマンドを消す
-    game.commands = game.commands.filter(c => !c.done);
+        // // カメラ位置の固定
+        // textAlign(LEFT, TOP);
 
-    // 壁を描写
-    for (let y = 0; y < game.map.lenY; y++) {
-        for (let x = 0; x < game.map.lenX; x++) {
-            let tile = game.map.tileAt(x, y);
-            if (tile === 1) {
-                text("🌳", width * x, width * y);
+        // // 表示に余裕を持たせる
+        // textSize(width * 7 / 8);
+        
+        // プレイヤーの入力を受け入れる
+        document.addEventListener("keydown",event =>{
+        if (keyIsPressed && game.commands.length === 0) {
+            // xyの移動を配列化
+            let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
+            if (dxy !== undefined) {
+                game.commands.push(new Move(game.player, dxy[0], dxy[1]));
             }
         }
-    }
+        });
 
-    // アクターを描画
-    for (let k of game.actors) {
-        text(k.image, width * k.x, width * k.y)
+        // 移動の描写を繰り返させる
+        for (let c of game.commands) {
+            c.exec();
+        }
+        // 実行し終わったコマンドを消す
+        game.commands = game.commands.filter(c => !c.done);
+
+        // 壁を描写
+        for (let y = 0; y < game.map.lenY; y++) {
+            for (let x = 0; x < game.map.lenX; x++) {
+                let tile = game.map.tileAt(x, y);
+                if (tile === 1) {
+                    ctx.font="52.5px serif";
+                    ctx.textAlign="left";
+                    ctx.textBaseline = "top";
+                    ctx.fillStyle="brown"
+                    ctx.strokeRect(width * x,width * y,width,width);
+                    ctx.fillRect(width * x,width * y,width,width);
+                    // ctx.fillText("🌳", width * x-1, width * y);
+                }
+            }
+        }
+
+        // アクターを描画
+        for (let k of game.actors) {
+            ctx.fillstyle="blue";
+            ctx.arc(width * k.x, width * k.y,0,2*Math.PI,true);
+        }
+        
+        // // カメラ位置の固定
+        // textAlign(LEFT, TOP);
+        // // 表示に余裕を持たせる
+        // textSize(width * 7 / 8);
+
+        // プレイヤーの入力を受け入れる
+        if (keyIsPressed && game.commands.length === 0) {
+            // xyの移動を配列化
+            let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
+            if (dxy !== undefined) {
+                game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+            }
+        }
+
+        // 移動の描写を繰り返させる
+        for (let c of game.commands) {
+            c.exec();
+        }
+        // 実行し終わったコマンドを消す
+        game.commands = game.commands.filter(c => !c.done);
+
+        // アクターを描画
+        for (let k of game.actors) {
+            text(k.image, width * k.x, width * k.y)
+        }
+    }else{
+
     }
 
 }
+
+setInterval(draw,1/fps);
