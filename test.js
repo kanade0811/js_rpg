@@ -47,6 +47,28 @@ class Actor {
         this.y = y;
         this.image = image;
     }
+    draw(ctx,width){
+        if(this.image && this.image.complete){
+            ctx.drawImage(
+                this.image,
+                this.x*width,
+                this.y*width,
+                width,
+                width
+            )
+            console.log(true)
+        }else{
+            // 画像が読み込まれていないときの仮
+            ctx.fillStyle="blue"
+            ctx.fillRect(
+                this.x*width+width/6,
+                this.y*width+width/6,
+                width*2/3,
+                width*2/3
+            )
+            console.log(false)
+        }
+    }
 }
 
 class Camera {
@@ -120,10 +142,12 @@ class Game {
 let game;
 
 window.onload=function () {
+    const image=new Image();
+    image.src="player.png";
     // ゲーム状態を初期化
     game = new Game();
     // プレイヤーを作る
-    let player = new Actor(3, 3);
+    let player = new Actor(3, 3,image);
     game.player = player;
     // 初期配置のアクター
     game.actors = [player];
@@ -133,21 +157,15 @@ window.onload=function () {
 const draw= function() {
     const canvas=document.getElementById("canvas");
     const ctx=canvas.getContext("2d");
-    if(canvas.getContext){ // 描画に関係あるところをこの中に
+    // 描写に関係あるところをこの中に
+    if(canvas.getContext){
         // 1マスの大きさ
         let width = 60;
-
         // 背景色
         ctx.fillStyle="orange";
-
         ctx.fillRect(0,0,480,480);
 
-        // // カメラ位置の固定
-        // textAlign(LEFT, TOP);
-
-        // // 表示に余裕を持たせる
-        // textSize(width * 7 / 8);
-        
+/*
         // プレイヤーの入力を受け入れる
         document.addEventListener("keydown",event =>{
         if (keyIsPressed && game.commands.length === 0) {
@@ -159,6 +177,24 @@ const draw= function() {
         }
         });
 
+        // // プレイヤーの入力を受け入れる
+        // if (game.commands.length === 0){
+        // document.addEventListener("keydown",(event) =>{
+        //     let key=event.code;
+        //     if(key===37){
+        //         let dxy=[-1,0];
+        //     }
+        // }
+
+        // if (keyIsPressed && game.commands.length === 0) {
+        //     // xyの移動を配列化
+        //     let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
+        //     if (dxy !== undefined) {
+        //         game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+        //     }
+        // }
+        // });
+
         // 移動の描写を繰り返させる
         for (let c of game.commands) {
             c.exec();
@@ -166,6 +202,7 @@ const draw= function() {
         // 実行し終わったコマンドを消す
         game.commands = game.commands.filter(c => !c.done);
 
+*/
         // 壁を描写
         for (let y = 0; y < game.map.lenY; y++) {
             for (let x = 0; x < game.map.lenX; x++) {
@@ -184,34 +221,7 @@ const draw= function() {
 
         // アクターを描画
         for (let k of game.actors) {
-            ctx.fillstyle="blue";
-            ctx.arc(width * k.x, width * k.y,0,2*Math.PI,true);
-        }
-        
-        // // カメラ位置の固定
-        // textAlign(LEFT, TOP);
-        // // 表示に余裕を持たせる
-        // textSize(width * 7 / 8);
-
-        // プレイヤーの入力を受け入れる
-        if (keyIsPressed && game.commands.length === 0) {
-            // xyの移動を配列化
-            let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
-            if (dxy !== undefined) {
-                game.commands.push(new Move(game.player, dxy[0], dxy[1]));
-            }
-        }
-
-        // 移動の描写を繰り返させる
-        for (let c of game.commands) {
-            c.exec();
-        }
-        // 実行し終わったコマンドを消す
-        game.commands = game.commands.filter(c => !c.done);
-
-        // アクターを描画
-        for (let k of game.actors) {
-            text(k.image, width * k.x, width * k.y)
+            k.draw(ctx,width)
         }
     }else{ // 描画に関係ない部分をこの中に
 
