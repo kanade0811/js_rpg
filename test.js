@@ -1,5 +1,5 @@
 // 環境変数
-const fps=30;
+const fps = 30;
 
 class Map {
     constructor() {
@@ -31,8 +31,8 @@ class Map {
         return this.tiles[y * this.lenX + x];
     }
     //指定の座標が床なのか判定する
-    isWalkabe(x,y){
-        return (this.tileAt(x,y) === 0);
+    isWalkable(x, y) {
+        return (this.tileAt(x, y) === 0);
     }
 }
 
@@ -45,40 +45,28 @@ class Actor {
     constructor(x, y, image) {
         this.x = x;
         this.y = y;
+        this.dir = -1;
         this.image = image;
     }
-    draw(ctx,width){
-        if(this.image && this.image.complete){
+    draw(ctx, width) {
+        if (this.image && this.image.complete) {
             ctx.drawImage(
                 this.image,
-                this.x*width,
-                this.y*width,
+                this.x * width,
+                this.y * width,
                 width,
                 width
             )
-            console.log(true)
-        }else{
+        } else {
             // 画像が読み込まれていないときの仮
-            ctx.fillStyle="blue"
+            ctx.fillStyle = "blue"
             ctx.fillRect(
-                this.x*width+width/6,
-                this.y*width+width/6,
-                width*2/3,
-                width*2/3
+                this.x * width + width / 6,
+                this.y * width + width / 6,
+                width * 2 / 3,
+                width * 2 / 3
             )
-            console.log(false)
         }
-    }
-}
-
-class Camera {
-    /**
-     * @param {number} x カメラのx
-     * @param {number} y カメラのy
-     */
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
     }
 }
 
@@ -110,9 +98,14 @@ class Move {
             this.beginY = this.actor.y;
             this.endX = this.actor.x + this.dx;
             this.endY = this.actor.y + this.dy;
+            if(this.dx==1) this.dir=0 ;
+            if(this.dy==-1) this.dir=1 ;
+            if(this.dx==-1) this.dir=2 ;
+            if(this.dy==1) this.dir=3 ;
+            console.log(this.dir)
             //移動不可なら実行済みにして終了
-            if(!(game.map.isWalkabe(this.endX,this.endY))) {
-                this.frame =20;
+            if (!(game.map.isWalkable(this.endX, this.endY))) {
+                this.frame = 20;
                 return this.done;
             }
         }
@@ -135,65 +128,47 @@ class Game {
         this.map = new Map();
         this.player = null;
         this.actors = [];
-        this.camera = new Camera(0, 0);
         this.commands = [];
     }
 }
 let game;
 
-window.onload=function () {
-    const image=new Image();
-    image.src="player.png";
+window.onload = function () {
+    const image = new Image();
+    image.src = "player.png";
     // ゲーム状態を初期化
     game = new Game();
     // プレイヤーを作る
-    let player = new Actor(3, 3,image);
+    let player = new Actor(3, 3, null);
     game.player = player;
     // 初期配置のアクター
     game.actors = [player];
     // createCanvas(480, 480);
 }
 
-const draw= function() {
-    const canvas=document.getElementById("canvas");
-    const ctx=canvas.getContext("2d");
+const draw = function () {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
     // 描写に関係あるところをこの中に
-    if(canvas.getContext){
+    if (canvas.getContext) {
         // 1マスの大きさ
         let width = 60;
         // 背景色
-        ctx.fillStyle="orange";
-        ctx.fillRect(0,0,480,480);
+        ctx.fillStyle = "orange";
+        ctx.fillRect(0, 0, 480, 480);
 
-/*
         // プレイヤーの入力を受け入れる
-        document.addEventListener("keydown",event =>{
-        if (keyIsPressed && game.commands.length === 0) {
-            // xyの移動を配列化
-            let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
-            if (dxy !== undefined) {
-                game.commands.push(new Move(game.player, dxy[0], dxy[1]));
-            }
+        if (game.commands.length === 0) {
+            document.addEventListener("keydown", (event) => {
+                console.log(`keydown:${event.code}`)
+                let move = { KeyA: [-1, 0], KeyW: [0, -1], KeyD: [1, 0], KeyS: [0, 1] };
+                let dxy = move[event.code];
+                if (dxy !== undefined) {
+                    game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+                }
+            });
         }
-        });
-
-        // // プレイヤーの入力を受け入れる
-        // if (game.commands.length === 0){
-        // document.addEventListener("keydown",(event) =>{
-        //     let key=event.code;
-        //     if(key===37){
-        //         let dxy=[-1,0];
-        //     }
-        // }
-
-        // if (keyIsPressed && game.commands.length === 0) {
-        //     // xyの移動を配列化
-        //     let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
-        //     if (dxy !== undefined) {
-        //         game.commands.push(new Move(game.player, dxy[0], dxy[1]));
-        //     }
-        // }
-        // });
 
         // 移動の描写を繰り返させる
         for (let c of game.commands) {
@@ -202,31 +177,30 @@ const draw= function() {
         // 実行し終わったコマンドを消す
         game.commands = game.commands.filter(c => !c.done);
 
-*/
         // 壁を描写
         for (let y = 0; y < game.map.lenY; y++) {
             for (let x = 0; x < game.map.lenX; x++) {
                 let tile = game.map.tileAt(x, y);
                 if (tile === 1) {
-                    ctx.font="52.5px serif";
-                    ctx.textAlign="left";
+                    ctx.font = "52.5px serif";
+                    ctx.textAlign = "left";
                     ctx.textBaseline = "top";
-                    ctx.fillStyle="brown"
-                    ctx.strokeRect(width * x,width * y,width,width);
-                    ctx.fillRect(width * x,width * y,width,width);
-                    // ctx.fillText("🌳", width * x-1, width * y);
+                    ctx.fillStyle = "brown"
+                    ctx.strokeRect(width * x, width * y, width, width);
+                    ctx.fillRect(width * x, width * y, width, width);
                 }
             }
         }
 
         // アクターを描画
         for (let k of game.actors) {
-            k.draw(ctx,width)
+            k.draw(ctx, width)
         }
-    }else{ // 描画に関係ない部分をこの中に
+    } else { // 描画に関係ない部分をこの中に
 
     }
-
 }
 
-setInterval(draw,1000/fps);
+
+
+setInterval(draw, 1000 / fps);
