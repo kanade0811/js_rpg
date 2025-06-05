@@ -60,12 +60,31 @@ class Actor {
         } else {
             // 画像が読み込まれていないときの仮
             ctx.fillStyle = "blue"
+
+            let rad = Math.PI / 2 * this.dir
+            ctx.beginPath();
+            ctx.moveTo(
+                width * (this.x + 1 / 2 + Math.cos(rad) / 2),
+                width * (this.y + 1 / 2 - Math.sin(rad) / 2)
+            );
+            ctx.lineTo(
+                width * (this.x + 1 / 2 + Math.cos(rad) / 2)+2/Math.sqrt(3)*width*Math.cos(rad+5/6*Math.PI),
+                width * (this.y + 1 / 2 - Math.sin(rad) / 2)-2/Math.sqrt(3)*width*Math.sin(rad+5/6*Math.PI)
+            );
+            ctx.lineTo(
+                width * (this.x + 1 / 2 + Math.cos(rad) / 2)+2/Math.sqrt(3)*width*Math.cos(rad+7/6*Math.PI),
+                width * (this.y + 1 / 2 - Math.sin(rad) / 2)-2/Math.sqrt(3)*width*Math.sin(rad+7/6*Math.PI)
+            );
+            ctx.fill();
+
+            /*
             ctx.fillRect(
                 this.x * width + width / 6,
                 this.y * width + width / 6,
                 width * 2 / 3,
                 width * 2 / 3
             )
+            */
         }
     }
 }
@@ -98,10 +117,10 @@ class Move {
             this.beginY = this.actor.y;
             this.endX = this.actor.x + this.dx;
             this.endY = this.actor.y + this.dy;
-            if(this.dx==1) this.dir=0 ;
-            if(this.dy==-1) this.dir=1 ;
-            if(this.dx==-1) this.dir=2 ;
-            if(this.dy==1) this.dir=3 ;
+            if (this.dx == 1) this.dir = 0;
+            if (this.dy == -1) this.dir = 1;
+            if (this.dx == -1) this.dir = 2;
+            if (this.dy == 1) this.dir = 3;
             console.log(this.dir)
             //移動不可なら実行済みにして終了
             if (!(game.map.isWalkable(this.endX, this.endY))) {
@@ -161,7 +180,6 @@ const draw = function () {
         // プレイヤーの入力を受け入れる
         if (game.commands.length === 0) {
             document.addEventListener("keydown", (event) => {
-                console.log(`keydown:${event.code}`)
                 let move = { KeyA: [-1, 0], KeyW: [0, -1], KeyD: [1, 0], KeyS: [0, 1] };
                 let dxy = move[event.code];
                 if (dxy !== undefined) {
@@ -200,7 +218,5 @@ const draw = function () {
 
     }
 }
-
-
 
 setInterval(draw, 1000 / fps);
