@@ -1,3 +1,6 @@
+// 環境変数
+const fps = 30;
+
 class Map {
     constructor() {
         // マップの配列
@@ -28,8 +31,8 @@ class Map {
         return this.tiles[y * this.lenX + x];
     }
     //指定の座標が床なのか判定する
-    isWalkabe(x,y){
-        return (this.tileAt(x,y) === 0);
+    isWalkable(x, y) {
+        return (this.tileAt(x, y) === 0);
     }
 }
 
@@ -42,18 +45,47 @@ class Actor {
     constructor(x, y, image) {
         this.x = x;
         this.y = y;
+        this.dir = -1;
         this.image = image;
     }
-}
+    draw(ctx, width) {
+        if (this.image && this.image.complete) {
+            ctx.drawImage(
+                this.image,
+                this.x * width,
+                this.y * width,
+                width,
+                width
+            )
+        } else {
+            // 画像が読み込まれていないときの仮
+            ctx.fillStyle = "blue"
 
-class Camera {
-    /**
-     * @param {number} x カメラのx
-     * @param {number} y カメラのy
-     */
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
+            let rad = Math.PI / 2 * this.dir
+            ctx.beginPath();
+            ctx.moveTo(
+                width * (this.x + 1 / 2 + Math.cos(rad) / 2),
+                width * (this.y + 1 / 2 - Math.sin(rad) / 2)
+            );
+            ctx.lineTo(
+                width * (this.x + 1 / 2 + Math.cos(rad) / 2) + 2 / Math.sqrt(3) * width * 0.7 * Math.cos(rad + 5 / 6 * Math.PI),
+                width * (this.y + 1 / 2 - Math.sin(rad) / 2) - 2 / Math.sqrt(3) * width * 0.7 * Math.sin(rad + 5 / 6 * Math.PI)
+            );
+            ctx.lineTo(
+                width * (this.x + 1 / 2 + Math.cos(rad) / 2) + 2 / Math.sqrt(3) * width * 0.7 * Math.cos(rad + 7 / 6 * Math.PI),
+                width * (this.y + 1 / 2 - Math.sin(rad) / 2) - 2 / Math.sqrt(3) * width * 0.7 * Math.sin(rad + 7 / 6 * Math.PI)
+            );
+            ctx.fill();
+
+            /*
+            ctx.fillRect(
+                this.x * width + width / 6,
+                this.y * width + width / 6,
+                width * 2 / 3,
+                width * 2 / 3
+            )
+            */
+        }
     }
 }
 
@@ -85,9 +117,13 @@ class Move {
             this.beginY = this.actor.y;
             this.endX = this.actor.x + this.dx;
             this.endY = this.actor.y + this.dy;
+            if (this.dx == 1) this.actor.dir = 0;
+            if (this.dy == -1) this.actor.dir = 1;
+            if (this.dx == -1) this.actor.dir = 2;
+            if (this.dy == 1) this.actor.dir = 3;
             //移動不可なら実行済みにして終了
-            if(!(game.map.isWalkabe(this.endX,this.endY))) {
-                this.frame =20;
+            if (!(game.map.isWalkable(this.endX, this.endY))) {
+                this.frame = 20;
                 return this.done;
             }
         }
@@ -105,69 +141,103 @@ class Move {
     }
 }
 
+class Item {
+    /**
+    * @param {number} x itemのx座標
+    * @param {number} y itemのy座標
+    * @param {image} image itemの画像
+    */
+    constructor(x, y, image) {
+        this.x = x
+        this.y = y
+        this.image = image
+    }
+}
+
+let key = new Item(2, 1, null)
+
 class Game {
     constructor() {
         this.map = new Map();
         this.player = null;
         this.actors = [];
-        this.camera = new Camera(0, 0);
         this.commands = [];
     }
 }
 let game;
 
-function setup() {
+window.onload = function () {
+    const image = new Image();
+    image.src = "player.png";
     // ゲーム状態を初期化
     game = new Game();
     // プレイヤーを作る
-    let player = new Actor(3, 3, "🕺");
+    let player = new Actor(3, 3, null);
     game.player = player;
     // 初期配置のアクター
     game.actors = [player];
-    // キャンバスを作る
-    createCanvas(480, 480);
-}
-
-function draw() {
-
-    // 1マスの大きさ
-    let width = 60;
-    // 背景色
-    background("Bisque");
-    // カメラ位置の固定
-    textAlign(LEFT, TOP);
-    // 表示に余裕を持たせる
-    textSize(width * 7 / 8);
-
-    // プレイヤーの入力を受け入れる
-    if (keyIsPressed && game.commands.length === 0) {
-        // xyの移動を配列化
-        let dxy = { 37: [-1, 0], 38: [0, -1], 39: [1, 0], 40: [0, 1] }[keyCode];
+    // キー入力がトリガーとなり移動が始まる
+    document.addEventListener("keydown", (event) => {
+        if (game.commands.length > 0) return;
+        let move = {
+            KeyA: [-1, 0],
+            KeyW: [0, -1],
+            KeyD: [1, 0],
+            KeyS: [0, 1]
+        };
+        let dxy = move[event.code];
         if (dxy !== undefined) {
             game.commands.push(new Move(game.player, dxy[0], dxy[1]));
         }
-    }
+    });
+}
 
-    // 移動の描写を繰り返させる
-    for (let c of game.commands) {
-        c.exec();
-    }
-    // 実行し終わったコマンドを消す
-    game.commands = game.commands.filter(c => !c.done);
+const draw = function () {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
 
-    // 壁を描写
-    for (let y = 0; y < game.map.lenY; y++) {
-        for (let x = 0; x < game.map.lenX; x++) {
-            let tile = game.map.tileAt(x, y);
-            if (tile === 1) {
-                text("🌳", width * x, width * y);
+    // 描写に関係あるところをこの中に
+    if (canvas.getContext) {
+        // 1マスの大きさ
+        let width = 60;
+        // 背景色
+        ctx.fillStyle = "orange";
+        ctx.fillRect(0, 0, 480, 480);
+
+        // 移動の描写を繰り返させる
+        for (let c of game.commands) {
+            c.exec();
+        }
+        // 実行し終わったコマンドを消す
+        game.commands = game.commands.filter(c => !c.done);
+
+        // 壁を描写
+        for (let y = 0; y < game.map.lenY; y++) {
+            for (let x = 0; x < game.map.lenX; x++) {
+                let tile = game.map.tileAt(x, y);
+                if (tile === 1) {
+                    ctx.fillStyle = "brown"
+                    ctx.strokeRect(width * x, width * y, width, width);
+                    ctx.fillRect(width * x, width * y, width, width);
+                }
             }
         }
-    }
 
-    // アクターを描画
-    for (let k of game.actors) {
-        text(k.image, width * k.x, width * k.y)
-    }
+        // アクターを描画
+        for (let k of game.actors) {
+            k.draw(ctx, width)
+        }
 
+        ctx.fillStyle = "orange";
+        ctx.fillRect(0, 540, 480, 60);
+        for (let x = 0; k < game.map.lenX; k++) {
+            ctx.fillStyle = "brown"
+            ctx.strokeRect(width * x, 540, width, width)
+            // ctx.fillRect(width * x, 540, width, width)
+        }
+    } else { // 描画に関係ない部分をこの中に
+
+    }
 }
+
+setInterval(draw, 1000 / fps);
