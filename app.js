@@ -178,9 +178,14 @@ class Item {
             )
         }
     }
-    //指定の座標が床なのか判定する
-    isWalkable(x, y) {
-        return
+    act(){
+        let dxyData=[[1,0],[0,-1],[-1,0],[0,1]]
+        let dxy=dxyData[game.actors[0].dir]
+        let playerXY=[game.actors[0].x+dxy[0],game.actors[0].y+dxy[1]]
+        let itemXY=[game.items[0].x,game.items[0].y]
+        if(playerXY[0]===itemXY[0]&&playerXY[1]===itemXY[1]){
+            console.log("You can do this act.")
+        }
     }
 }
 
@@ -191,6 +196,7 @@ class Game {
         this.actors = [];
         this.commands = [];
         this.items=[];
+        this.item=new Item();
     }
 }
 let game;
@@ -220,6 +226,11 @@ window.onload = function () {
         let dxy = move[event.code];
         if (dxy !== undefined) {
             game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+        }
+    });
+    document.addEventListener("keydown", (event) => {
+        if(event.code==="Enter"){
+            game.item.act()
         }
     });
 }
