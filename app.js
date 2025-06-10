@@ -48,7 +48,7 @@ class Actor {
         this.dir = -1;
         this.image = image;
     }
-    draw(ctx, width) {
+    draw(ctx) {
         if (this.image && this.image.complete) {
             ctx.drawImage(
                 this.image,
@@ -126,9 +126,9 @@ class Move {
                 this.frame = 20;
                 return this.done;
             }
-            for(let k of game.items){
-                if((this.endX==k.x) &&(this.endY==k.y)){
-                    this.frame=20;
+            for (let k of game.items) {
+                if ((this.endX == k.x) && (this.endY == k.y)) {
+                    this.frame = 20;
                     return this.done;
                 }
             }
@@ -158,7 +158,7 @@ class Item {
         this.y = y
         this.image = image
     }
-    draw(ctx, width) {
+    draw(ctx) {
         if (this.image && this.image.complete) {
             ctx.drawImage(
                 this.image,
@@ -178,12 +178,12 @@ class Item {
             )
         }
     }
-    act(){
-        let dxyData=[[1,0],[0,-1],[-1,0],[0,1]]
-        let dxy=dxyData[game.actors[0].dir]
-        let playerXY=[game.actors[0].x+dxy[0],game.actors[0].y+dxy[1]]
-        let itemXY=[game.items[0].x,game.items[0].y]
-        if(playerXY[0]===itemXY[0]&&playerXY[1]===itemXY[1]){
+    act() {
+        let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
+        let dxy = dxyData[game.actors[0].dir]
+        let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
+        let itemXY = [game.items[0].x, game.items[0].y]
+        if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
             console.log("You can do this act.")
         }
     }
@@ -195,8 +195,8 @@ class Game {
         this.player = null;
         this.actors = [];
         this.commands = [];
-        this.items=[];
-        this.item=new Item();
+        this.items = [];
+        this.item = new Item();
     }
 }
 let game;
@@ -212,8 +212,8 @@ window.onload = function () {
     // 初期配置のアクター
     game.actors = [player];
     // アイテムの作成
-    let key=new Item(2, 1, src="./images/key.png");
-    game.items=[key];
+    let key = new Item(2, 1, src = "./images/key.png");
+    game.items = [key];
     // キー入力がトリガーとなり移動が始まる
     document.addEventListener("keydown", (event) => {
         if (game.commands.length > 0) return;
@@ -229,62 +229,72 @@ window.onload = function () {
         }
     });
     document.addEventListener("keydown", (event) => {
-        if(event.code==="Enter"){
+        if (event.code === "Enter") {
             game.item.act()
         }
     });
 }
 
-const draw = function () {
+setInterval(draw, 1000 / fps);
+const width = 60
+function draw() {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    // 描写に関係あるところをこの中に
-    if (canvas.getContext) {
-        // 1マスの大きさ
-        let width = 60;
-        // 背景色
-        ctx.fillStyle = "orange";
-        ctx.fillRect(0, 0, 480, 480);
-
-        // 移動の描写を繰り返させる
-        for (let c of game.commands) {
-            c.exec();
-        }
-        // 実行し終わったコマンドを消す
-        game.commands = game.commands.filter(c => !c.done);
-
-        // 壁を描写
-        for (let y = 0; y < game.map.lenY; y++) {
-            for (let x = 0; x < game.map.lenX; x++) {
-                let tile = game.map.tileAt(x, y);
-                if (tile === 1) {
-                    ctx.fillStyle = "brown"
-                    ctx.strokeRect(width * x, width * y, width, width);
-                    ctx.fillRect(width * x, width * y, width, width);
-                }
-            }
-        }
-
-        // アイテムを描画
-        for(let k of game.items){
-            k.draw(ctx,width)
-        }
-
-        // アクターを描画
-        for (let k of game.actors) {
-            k.draw(ctx, width)
-        }
-
-        ctx.fillStyle = "green";
-        ctx.fillRect(0, 540, 480, 60);
-        for (let x = 0; x < game.map.lenX; x++) {
-            ctx.fillStyle = "brown"
-            ctx.strokeRect(width * x, 540, width, width)
-        }
+    if (canvas.getContext) {    // 描写に関係あるところをこの中に
+        drawBackground(ctx)
+        drawItemBox(ctx)
+        drawWall(ctx)
+        drawItem(ctx)
+        moveActor()
+        drawActor(ctx)
     } else { // 描画に関係ない部分をこの中に
-
     }
 }
 
-setInterval(draw, 1000 / fps);
+function drawBackground(ctx) {
+    ctx.fillStyle = "orange";
+    ctx.fillRect(0, 0, 480, 480);
+}
+
+function drawItemBox(ctx) {
+    ctx.fillStyle = "green";
+    ctx.fillRect(0, 540, 480, 60);
+    for (let x = 0; x < game.map.lenX; x++) {
+        ctx.fillStyle = "brown"
+        ctx.strokeRect(width * x, 540, width, width)
+    }
+}
+
+function drawWall(ctx) {
+    for (let y = 0; y < game.map.lenY; y++) {
+        for (let x = 0; x < game.map.lenX; x++) {
+            let tile = game.map.tileAt(x, y);
+            if (tile === 1) {
+                ctx.fillStyle = "brown"
+                ctx.strokeRect(width * x, width * y, width, width);
+                ctx.fillRect(width * x, width * y, width, width);
+            }
+        }
+    }
+}
+
+function drawItem(ctx) {
+    for (let k of game.items) {
+        k.draw(ctx)
+    }
+}
+
+function moveActor() {
+    for (let c of game.commands) {
+        c.exec();
+    }
+    // 実行し終わったコマンドを消す
+    game.commands = game.commands.filter(c => !c.done);
+}
+
+function drawActor(ctx) {
+    for (let k of game.actors) {
+        k.draw(ctx)
+    }
+}
