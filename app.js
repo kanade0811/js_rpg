@@ -197,6 +197,9 @@ class Game {
         this.commands = [];
         this.items = [];
         this.item = new Item();
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        this.draw=new Draw(ctx)
     }
 }
 let game;
@@ -212,7 +215,8 @@ window.onload = function () {
     // 初期配置のアクター
     game.actors = [player];
     // アイテムの作成
-    let key = new Item(2, 1, src = "./images/key.png");
+    let keyImage=src="./images/key.png"
+    let key = new Item(2, 1, keyImage);
     game.items = [key];
     // キー入力がトリガーとなり移動が始まる
     document.addEventListener("keydown", (event) => {
@@ -238,50 +242,14 @@ window.onload = function () {
 setInterval(draw, 1000 / fps);
 const width = 60
 function draw() {
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-
+    moveActor()
     if (canvas.getContext) {    // 描写に関係あるところをこの中に
-        drawBackground(ctx)
-        drawItemBox(ctx)
-        drawWall(ctx)
-        drawItem(ctx)
-        moveActor()
-        drawActor(ctx)
+        game.draw.background()
+        game.draw.itemBox()
+        game.draw.wall()
+        game.draw.item()
+        game.draw.actor()
     } else { // 描画に関係ない部分をこの中に
-    }
-}
-
-function drawBackground(ctx) {
-    ctx.fillStyle = "orange";
-    ctx.fillRect(0, 0, 480, 480);
-}
-
-function drawItemBox(ctx) {
-    ctx.fillStyle = "green";
-    ctx.fillRect(0, 540, 480, 60);
-    for (let x = 0; x < game.map.lenX; x++) {
-        ctx.fillStyle = "brown"
-        ctx.strokeRect(width * x, 540, width, width)
-    }
-}
-
-function drawWall(ctx) {
-    for (let y = 0; y < game.map.lenY; y++) {
-        for (let x = 0; x < game.map.lenX; x++) {
-            let tile = game.map.tileAt(x, y);
-            if (tile === 1) {
-                ctx.fillStyle = "brown"
-                ctx.strokeRect(width * x, width * y, width, width);
-                ctx.fillRect(width * x, width * y, width, width);
-            }
-        }
-    }
-}
-
-function drawItem(ctx) {
-    for (let k of game.items) {
-        k.draw(ctx)
     }
 }
 
@@ -293,8 +261,45 @@ function moveActor() {
     game.commands = game.commands.filter(c => !c.done);
 }
 
-function drawActor(ctx) {
-    for (let k of game.actors) {
-        k.draw(ctx)
+class Draw{
+    /**
+     * @param ctx 描画する際の引数
+     */
+    constructor(ctx){
+        this.ctx=ctx
+    }
+    background(){
+        this.ctx.fillStyle = "orange";
+        this.ctx.fillRect(0, 0, 480, 480);
+    }
+    itemBox(){
+        this.ctx.fillStyle = "green";
+        this.ctx.fillRect(0, 540, 480, 60);
+        for (let x = 0; x < game.map.lenX; x++) {
+            this.ctx.fillStyle = "brown"
+            this.ctx.strokeRect(width * x, 540, width, width)
+        }
+    }
+    wall(){
+        for (let y = 0; y < game.map.lenY; y++) {
+            for (let x = 0; x < game.map.lenX; x++) {
+                let tile = game.map.tileAt(x, y);
+                if (tile === 1) {
+                    this.ctx.fillStyle = "brown"
+                    this.ctx.strokeRect(width * x, width * y, width, width);
+                    this.ctx.fillRect(width * x, width * y, width, width);
+                }
+            }
+        }
+    }
+    item() {
+        for (let k of game.items) {
+            k.draw(this.ctx)
+        }
+    }
+    actor() {
+        for (let k of game.actors) {
+            k.draw(this.ctx)
+        }
     }
 }
