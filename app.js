@@ -3,7 +3,7 @@ const fps = 30;
 
 class Map {
     constructor() {
-        // マップの配列
+        // マップの配列、床は0,壁は1,アイテムは2
         this.tiles = [
             1, 1, 1, 1, 1, 1, 1, 1,
             1, 1, 0, 0, 0, 0, 1, 1,
@@ -27,7 +27,7 @@ class Map {
 
     // 座標を配列の番号に変換
     tileAt(x, y) {
-        if (x < 0 || this.lenX <= x || y < 0 || this.lenY <= y) return 1;
+        if (x < 0 || this.lenX <= x || y < 0 || this.lenY <= y) return -1;
         return this.tiles[y * this.lenX + x];
     }
     //指定の座標が床なのか判定する
@@ -126,6 +126,12 @@ class Move {
                 this.frame = 20;
                 return this.done;
             }
+            for(let k of game.items){
+                if((this.endX==k.x) &&(this.endY==k.y)){
+                    this.frame=20;
+                    return this.done;
+                }
+            }
         }
         // ↑で計算した座標の間を移動する
         this.actor.x = this.beginX + this.frame * this.dx / 20;
@@ -152,9 +158,31 @@ class Item {
         this.y = y
         this.image = image
     }
+    draw(ctx, width) {
+        if (this.image && this.image.complete) {
+            ctx.drawImage(
+                this.image,
+                this.x * width,
+                this.y * width,
+                width,
+                width
+            )
+        } else {
+            // 画像が読み込まれていないときの仮
+            ctx.fillStyle = "red"
+            ctx.fillRect(
+                this.x * width + width / 6,
+                this.y * width + width / 6,
+                width * 2 / 3,
+                width * 2 / 3
+            )
+        }
+    }
+    //指定の座標が床なのか判定する
+    isWalkable(x, y) {
+        return
+    }
 }
-
-let key = new Item(2, 1, null)
 
 class Game {
     constructor() {
@@ -162,6 +190,7 @@ class Game {
         this.player = null;
         this.actors = [];
         this.commands = [];
+        this.items=[];
     }
 }
 let game;
@@ -176,6 +205,9 @@ window.onload = function () {
     game.player = player;
     // 初期配置のアクター
     game.actors = [player];
+    // アイテムの作成
+    let key=new Item(2, 1, src="./images/key.png");
+    game.items=[key];
     // キー入力がトリガーとなり移動が始まる
     document.addEventListener("keydown", (event) => {
         if (game.commands.length > 0) return;
@@ -223,17 +255,21 @@ const draw = function () {
             }
         }
 
+        // アイテムを描画
+        for(let k of game.items){
+            k.draw(ctx,width)
+        }
+
         // アクターを描画
         for (let k of game.actors) {
             k.draw(ctx, width)
         }
 
-        ctx.fillStyle = "orange";
+        ctx.fillStyle = "green";
         ctx.fillRect(0, 540, 480, 60);
-        for (let x = 0; k < game.map.lenX; k++) {
+        for (let x = 0; x < game.map.lenX; x++) {
             ctx.fillStyle = "brown"
             ctx.strokeRect(width * x, 540, width, width)
-            // ctx.fillRect(width * x, 540, width, width)
         }
     } else { // 描画に関係ない部分をこの中に
 
