@@ -199,7 +199,6 @@ class Game {
         this.item = new Item();
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
-        this.draw = new Draw(ctx)
         setInterval(draw, 1000 / fps);
     }
 }
@@ -208,6 +207,14 @@ let game;
 window.onload = function () {
     // ゲーム状態を初期化
     game = new Game();
+
+    // 背景の画像を設定
+    game.floorImage = new Image();
+    game.floorImage.src = "./images/floor.png";
+    game.wallImage = new Image();
+    game.wallImage.src = "./images/wall.png"
+    game.inventoryImage = new Image();
+    game.inventoryImage.src = "./images/inventory.png"
 
     // playerを作る
     const playerImage = new Image();
@@ -268,68 +275,89 @@ function moveActor() {
     game.commands = game.commands.filter(c => !c.done);
 }
 
-class Draw {
-    /**
-     * @param ctx 描画する際の引数
-     */
-    constructor(ctx) {
-        this.ctx = ctx
-        this.floorImage = new Image();
-        this.floorImage.src = "./images/floor.png";
-        this.wallImage = new Image();
-        this.wallImage.src = "./images/wall.png"
-        this.inventoryImage = new Image();
-        this.inventoryImage.src = "./images/inventory.png"
+function draw() {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    moveActor()
+
+    if (canvas.getContext) {    // 描写に関係あるところをこの中に
+        drawClear(ctx)
+        drawFloorAndWall(ctx)
+        drawInventory(ctx)
+        drawItem(ctx)
+        drawActor(ctx)
+    } else { // 描画に関係ない部分をこの中に
     }
-    floorAndWall() {
-        for (let y = 0; y < game.map.lenY; y++) {
-            for (let x = 0; x < game.map.lenX; x++) {
-                let tile = game.map.tileAt(x, y);
-                if (tile === 0) {
-                    this.ctx.drawImage(
-                        this.floorImage,
-                        x * width,
-                        y * width,
-                        width,
-                        width
-                    )
-                } else if (tile === 1) {
-                    this.ctx.drawImage(
-                        this.wallImage,
-                        x * width,
-                        y * width,
-                        width,
-                        width
-                    )
-                }
+}
+
+function drawClear(ctx){
+    ctx.clearRect(0, 0, 1000, 750)
+}
+
+function drawFloorAndWall(ctx) {
+    for (let y = 0; y < game.map.lenY; y++) {
+        for (let x = 0; x < game.map.lenX; x++) {
+            let tile = game.map.tileAt(x, y);
+            if (tile === 0) {
+                ctx.drawImage(
+                    game.floorImage,
+                    x * width,
+                    y * width,
+                    width,
+                    width
+                )
+            } else if (tile === 1) {
+                ctx.drawImage(
+                    game.wallImage,
+                    x * width,
+                    y * width,
+                    width,
+                    width
+                )
             }
         }
     }
-    inventory() {
-        this.ctx.fillStyle = "green";
-        this.ctx.fillRect(0, 540, 480, 60);
-        const y = game.map.lenY + 1
-        this.ctx.strokeStyle = "brown";
+}
+
+function drawInventory(ctx){   
+    ctx.fillStyle = "green";
+    ctx.fillRect(0, 540, 480, 60);
+    const y = game.map.lenY + 1
+    ctx.strokeStyle = "brown";
+    for (let x = 0; x < game.map.lenX; x++) {
+        ctx.drawImage(
+            game.inventoryImage,
+            x * width,
+            y * width,
+            width,
+            width
+        )
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x * width + 1, y * width, width - 2, width - 2)
+    }
+}
+
+function drawItem(ctx) {
+    for (let k of game.items) {
+        k.draw(ctx)
+    }
+}
+
+function drawWall(ctx) {
+    for (let y = 0; y < game.map.lenY; y++) {
         for (let x = 0; x < game.map.lenX; x++) {
-            this.ctx.drawImage(
-                this.inventoryImage,
-                x * width,
-                y * width,
-                width,
-                width
-            )
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeRect(x * width + 1, y * width, width - 2, width - 2)
+            let tile = game.map.tileAt(x, y);
+            if (tile === 1) {
+                ctx.fillStyle = "brown"
+                ctx.strokeRect(width * x, width * y, width, width);
+                ctx.fillRect(width * x, width * y, width, width);
+            }
         }
     }
-    item() {
-        for (let k of game.items) {
-            k.draw(this.ctx)
-        }
-    }
-    actor() {
-        for (let k of game.actors) {
-            k.draw(this.ctx)
-        }
+}
+
+function drawActor(ctx) {
+    for (let k of game.actors) {
+        k.draw(ctx)
     }
 }
