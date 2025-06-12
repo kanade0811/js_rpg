@@ -277,8 +277,8 @@ function moveActor() {
     game.commands = game.commands.filter(c => !c.done);
 }
 
-function drawClear(ctx){
-    ctx.clearRect(0, 0, game.map.lenX*width,(game.map.lenY+2)*width)
+function drawClear(ctx) {
+    ctx.clearRect(0, 0, game.map.lenX * width, (game.map.lenY + 2) * width)
 }
 
 function drawFloorAndWall(ctx) {
@@ -306,7 +306,7 @@ function drawFloorAndWall(ctx) {
     }
 }
 
-function drawInventory(ctx){
+function drawInventory(ctx) {
     const y = game.map.lenY + 1
     ctx.strokeStyle = "brown";
     for (let x = 0; x < game.map.lenX; x++) {
