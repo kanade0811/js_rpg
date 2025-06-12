@@ -48,7 +48,7 @@ class Actor {
         this.dir = -1;
         this.image = image;
     }
-    draw(ctx, width) {
+    draw(ctx) {
         if (this.image && this.image.complete) {
             ctx.drawImage(
                 this.image,
@@ -126,9 +126,9 @@ class Move {
                 this.frame = 20;
                 return this.done;
             }
-            for(let k of game.items){
-                if((this.endX==k.x) &&(this.endY==k.y)){
-                    this.frame=20;
+            for (let k of game.items) {
+                if ((this.endX == k.x) && (this.endY == k.y)) {
+                    this.frame = 20;
                     return this.done;
                 }
             }
@@ -158,7 +158,7 @@ class Item {
         this.y = y
         this.image = image
     }
-    draw(ctx, width) {
+    draw(ctx) {
         if (this.image && this.image.complete) {
             ctx.drawImage(
                 this.image,
@@ -178,9 +178,14 @@ class Item {
             )
         }
     }
-    //指定の座標が床なのか判定する
-    isWalkable(x, y) {
-        return
+    act() {
+        let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
+        let dxy = dxyData[game.actors[0].dir]
+        let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
+        let itemXY = [game.items[0].x, game.items[0].y]
+        if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
+            console.log("You can do this act.")
+        }
     }
 }
 
@@ -190,24 +195,35 @@ class Game {
         this.player = null;
         this.actors = [];
         this.commands = [];
-        this.items=[];
+        this.items = [];
+        this.item = new Item();
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        this.draw = new Draw(ctx)
+        setInterval(draw, 1000 / fps);
     }
 }
 let game;
 
 window.onload = function () {
-    const image = new Image();
-    image.src = "player.png";
     // ゲーム状態を初期化
     game = new Game();
-    // プレイヤーを作る
-    let player = new Actor(3, 3, null);
+
+    // playerを作る
+    const playerImage = new Image();
+    playerImage.src = "./images/player.png";
+    let player = new Actor(3, 3, playerImage);
     game.player = player;
-    // 初期配置のアクター
+    // 初期配置のactor
     game.actors = [player];
-    // アイテムの作成
-    let key=new Item(2, 1, src="./images/key.png");
-    game.items=[key];
+
+    // itemの作成
+    const keyImage = new Image();
+    keyImage.src = "./images/key.png"
+    let key = new Item(2, 1, keyImage);
+    // 初期配置のitem
+    game.items = [key];
+
     // キー入力がトリガーとなり移動が始まる
     document.addEventListener("keydown", (event) => {
         if (game.commands.length > 0) return;
@@ -222,58 +238,89 @@ window.onload = function () {
             game.commands.push(new Move(game.player, dxy[0], dxy[1]));
         }
     });
+    document.addEventListener("keydown", (event) => {
+        if (event.code === "Enter") {
+            game.item.act()
+        }
+    });
 }
 
-const draw = function () {
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-
-    // 描写に関係あるところをこの中に
-    if (canvas.getContext) {
-        // 1マスの大きさ
-        let width = 60;
-        // 背景色
-        ctx.fillStyle = "orange";
-        ctx.fillRect(0, 0, 480, 480);
-
-        // 移動の描写を繰り返させる
-        for (let c of game.commands) {
-            c.exec();
-        }
-        // 実行し終わったコマンドを消す
-        game.commands = game.commands.filter(c => !c.done);
-
-        // 壁を描写
-        for (let y = 0; y < game.map.lenY; y++) {
-            for (let x = 0; x < game.map.lenX; x++) {
-                let tile = game.map.tileAt(x, y);
-                if (tile === 1) {
-                    ctx.fillStyle = "brown"
-                    ctx.strokeRect(width * x, width * y, width, width);
-                    ctx.fillRect(width * x, width * y, width, width);
-                }
-            }
-        }
-
-        // アイテムを描画
-        for(let k of game.items){
-            k.draw(ctx,width)
-        }
-
-        // アクターを描画
-        for (let k of game.actors) {
-            k.draw(ctx, width)
-        }
-
-        ctx.fillStyle = "green";
-        ctx.fillRect(0, 540, 480, 60);
-        for (let x = 0; x < game.map.lenX; x++) {
-            ctx.fillStyle = "brown"
-            ctx.strokeRect(width * x, 540, width, width)
-        }
+const width = 60
+function draw() {
+    moveActor()
+    if (canvas.getContext) {    // 描写に関係あるところをこの中に
+        game.draw.background()
+        game.draw.itemBox()
+        game.draw.floorAndWall()
+        game.draw.item()
+        game.draw.actor()
     } else { // 描画に関係ない部分をこの中に
-
     }
 }
 
-setInterval(draw, 1000 / fps);
+function moveActor() {
+    for (let c of game.commands) {
+        c.exec();
+    }
+    // 実行し終わったコマンドを消す
+    game.commands = game.commands.filter(c => !c.done);
+}
+
+class Draw {
+    /**
+     * @param ctx 描画する際の引数
+     */
+    constructor(ctx) {
+        this.ctx = ctx
+        this.floorImage = new Image();
+        this.floorImage.src = "./images/floor.png";
+        this.wallImage = new Image();
+        this.wallImage.src = "./images/wall.png"
+    }
+    background() {
+        this.ctx.fillStyle = "orange";
+        this.ctx.fillRect(0, 0, 480, 480);
+    }
+    itemBox() {
+        this.ctx.fillStyle = "green";
+        this.ctx.fillRect(0, 540, 480, 60);
+        for (let x = 0; x < game.map.lenX; x++) {
+            this.ctx.fillStyle = "brown"
+            this.ctx.strokeRect(width * x, 540, width, width)
+        }
+    }
+    floorAndWall() {
+        for (let y = 0; y < game.map.lenY; y++) {
+            for (let x = 0; x < game.map.lenX; x++) {
+                let tile = game.map.tileAt(x, y);
+                if (tile === 0) {
+                    this.ctx.drawImage(
+                        this.floorImage,
+                        x * width,
+                        y * width,
+                        width,
+                        width
+                    )
+                } else if (tile === 1) {
+                    this.ctx.drawImage(
+                        this.wallImage,
+                        x * width,
+                        y * width,
+                        width,
+                        width
+                    )
+                }
+            }
+        }
+    }
+    item() {
+        for (let k of game.items) {
+            k.draw(this.ctx)
+        }
+    }
+    actor() {
+        for (let k of game.actors) {
+            k.draw(this.ctx)
+        }
+    }
+}
