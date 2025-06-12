@@ -309,6 +309,7 @@ class Draw {
         this.ctx.fillStyle = "green";
         this.ctx.fillRect(0, 540, 480, 60);
         const y = game.map.lenY + 1
+        this.ctx.strokeStyle = "brown";
         for (let x = 0; x < game.map.lenX; x++) {
             this.ctx.drawImage(
                 this.inventoryImage,
@@ -317,9 +318,8 @@ class Draw {
                 width,
                 width
             )
-            this.ctx.strokeStyle = "brown";
-            this.ctx.lineWidth = 4;
-            this.ctx.strokeRect(x * width + 2, y * width, width - 4, width - 2)
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(x * width + 1, y * width, width - 2, width - 2)
         }
     }
     item() {
