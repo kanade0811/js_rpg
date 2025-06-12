@@ -291,7 +291,7 @@ function draw() {
 }
 
 function drawClear(ctx){
-    ctx.clearRect(0, 0, 1000, 750)
+    ctx.clearRect(0, 0, game.map.lenX*width,(game.map.lenY+2)*width)
 }
 
 function drawFloorAndWall(ctx) {
@@ -319,9 +319,7 @@ function drawFloorAndWall(ctx) {
     }
 }
 
-function drawInventory(ctx){   
-    ctx.fillStyle = "green";
-    ctx.fillRect(0, 540, 480, 60);
+function drawInventory(ctx){
     const y = game.map.lenY + 1
     ctx.strokeStyle = "brown";
     for (let x = 0; x < game.map.lenX; x++) {
@@ -340,19 +338,6 @@ function drawInventory(ctx){
 function drawItem(ctx) {
     for (let k of game.items) {
         k.draw(ctx)
-    }
-}
-
-function drawWall(ctx) {
-    for (let y = 0; y < game.map.lenY; y++) {
-        for (let x = 0; x < game.map.lenX; x++) {
-            let tile = game.map.tileAt(x, y);
-            if (tile === 1) {
-                ctx.fillStyle = "brown"
-                ctx.strokeRect(width * x, width * y, width, width);
-                ctx.fillRect(width * x, width * y, width, width);
-            }
-        }
     }
 }
 
