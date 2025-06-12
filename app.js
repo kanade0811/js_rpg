@@ -222,9 +222,9 @@ window.onload = function () {
     // keyImage.src = "./images/key.png"
     // const key = new Item(2, 1, keyImage);
     // game.items.push(key);
-    const ticketBlueImage=new Image();
-    ticketBlueImage.src="./images/ticketBlue.png"
-    const ticketBlue=new Item(3,7,ticketBlueImage);
+    const ticketBlueImage = new Image();
+    ticketBlueImage.src = "./images/ticketBlue.png"
+    const ticketBlue = new Item(3, 7, ticketBlueImage);
     game.items.push(ticketBlue);
 
     // キー入力がトリガーとなり移動が始まる
@@ -278,8 +278,8 @@ class Draw {
         this.floorImage.src = "./images/floor.png";
         this.wallImage = new Image();
         this.wallImage.src = "./images/wall.png"
-        this.inventoryImage=new Image();
-        this.inventoryImage.src="./images/inventory.png"
+        this.inventoryImage = new Image();
+        this.inventoryImage.src = "./images/inventory.png"
     }
     floorAndWall() {
         for (let y = 0; y < game.map.lenY; y++) {
@@ -308,7 +308,8 @@ class Draw {
     inventory() {
         this.ctx.fillStyle = "green";
         this.ctx.fillRect(0, 540, 480, 60);
-        const y=game.map.lenY+1
+        const y = game.map.lenY + 1
+        this.ctx.strokeStyle = "brown";
         for (let x = 0; x < game.map.lenX; x++) {
             this.ctx.drawImage(
                 this.inventoryImage,
@@ -317,9 +318,8 @@ class Draw {
                 width,
                 width
             )
-            this.ctx.strokeStyle = "brown";
-            this.ctx.lineWidth=4;
-            this.ctx.strokeRect(x*width+2,y*width, width-4, width-2)
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(x * width + 1, y * width, width - 2, width - 2)
         }
     }
     item() {
