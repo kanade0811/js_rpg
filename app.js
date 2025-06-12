@@ -197,9 +197,6 @@ class Game {
         this.commands = [];
         this.items = [];
         this.item = new Item();
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        setInterval(draw, 1000 / fps);
     }
 }
 let game;
@@ -207,6 +204,7 @@ let game;
 window.onload = function () {
     // ゲーム状態を初期化
     game = new Game();
+    setInterval(draw, 1000 / fps);
 
     // 背景の画像を設定
     game.floorImage = new Image();
@@ -257,25 +255,6 @@ window.onload = function () {
 
 const width = 60
 function draw() {
-    moveActor()
-    if (canvas.getContext) {    // 描写に関係あるところをこの中に
-        game.draw.floorAndWall()
-        game.draw.inventory()
-        game.draw.item()
-        game.draw.actor()
-    } else { // 描画に関係ない部分をこの中に
-    }
-}
-
-function moveActor() {
-    for (let c of game.commands) {
-        c.exec();
-    }
-    // 実行し終わったコマンドを消す
-    game.commands = game.commands.filter(c => !c.done);
-}
-
-function draw() {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     moveActor()
@@ -290,8 +269,16 @@ function draw() {
     }
 }
 
-function drawClear(ctx){
-    ctx.clearRect(0, 0, game.map.lenX*width,(game.map.lenY+2)*width)
+function moveActor() {
+    for (let c of game.commands) {
+        c.exec();
+    }
+    // 実行し終わったコマンドを消す
+    game.commands = game.commands.filter(c => !c.done);
+}
+
+function drawClear(ctx) {
+    ctx.clearRect(0, 0, game.map.lenX * width, (game.map.lenY + 2) * width)
 }
 
 function drawFloorAndWall(ctx) {
@@ -319,7 +306,7 @@ function drawFloorAndWall(ctx) {
     }
 }
 
-function drawInventory(ctx){
+function drawInventory(ctx) {
     const y = game.map.lenY + 1
     ctx.strokeStyle = "brown";
     for (let x = 0; x < game.map.lenX; x++) {
