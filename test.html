@@ -6,6 +6,7 @@
     <title>Document</title>
 </head>
 <body>
+
     <button popovertarget="test-pop">
         push me
     </button>
@@ -19,5 +20,20 @@
             border-radius: 1rem;
         }
     </style>
+
+    <audio controls src="./SE/文字送りaループ用.mp3">
+    </audio>
+
+    <div class="btn" onclick="audio()">音がなるよ!!</div>
+    <audio id="btn_audio">
+    <source src="./audio/btn_audio.mp3" type="audio/mp3">
+    </audio>
+    <script>
+        function audio() {
+        document.getElementById('btn_audio').currentTime = 0; //連続クリックに対応
+        document.getElementById('btn_audio').play(); //クリックしたら音を再生
+}
+
+    </script>
 </body>
 </html>

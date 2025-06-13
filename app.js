@@ -45,47 +45,17 @@ class Actor {
     constructor(x, y, image) {
         this.x = x;
         this.y = y;
-        this.dir = -1;
+        this.dir = 3;
         this.image = image;
     }
     draw(ctx) {
-        if (this.image && this.image.complete) {
-            ctx.drawImage(
-                this.image,
-                this.x * width,
-                this.y * width,
-                width,
-                width
-            )
-        } else {
-            // 画像が読み込まれていないときの仮
-            ctx.fillStyle = "blue"
-
-            let rad = Math.PI / 2 * this.dir
-            ctx.beginPath();
-            ctx.moveTo(
-                width * (this.x + 1 / 2 + Math.cos(rad) / 2),
-                width * (this.y + 1 / 2 - Math.sin(rad) / 2)
-            );
-            ctx.lineTo(
-                width * (this.x + 1 / 2 + Math.cos(rad) / 2) + 2 / Math.sqrt(3) * width * 0.7 * Math.cos(rad + 5 / 6 * Math.PI),
-                width * (this.y + 1 / 2 - Math.sin(rad) / 2) - 2 / Math.sqrt(3) * width * 0.7 * Math.sin(rad + 5 / 6 * Math.PI)
-            );
-            ctx.lineTo(
-                width * (this.x + 1 / 2 + Math.cos(rad) / 2) + 2 / Math.sqrt(3) * width * 0.7 * Math.cos(rad + 7 / 6 * Math.PI),
-                width * (this.y + 1 / 2 - Math.sin(rad) / 2) - 2 / Math.sqrt(3) * width * 0.7 * Math.sin(rad + 7 / 6 * Math.PI)
-            );
-            ctx.fill();
-
-            /*
-            ctx.fillRect(
-                this.x * width + width / 6,
-                this.y * width + width / 6,
-                width * 2 / 3,
-                width * 2 / 3
-            )
-            */
-        }
+        ctx.drawImage(
+            this.image,
+            this.x * width,
+            this.y * width,
+            width,
+            width
+        )
     }
 }
 
@@ -134,8 +104,8 @@ class Move {
             }
         }
         // ↑で計算した座標の間を移動する
-        this.actor.x = this.beginX + this.frame * this.dx / 20;
-        this.actor.y = this.beginY + this.frame * this.dy / 20;
+        this.actor.x = this.beginX + this.frame * this.dx / fps;
+        this.actor.y = this.beginY + this.frame * this.dy / fps;
         return this.done;
     }
 
@@ -143,7 +113,7 @@ class Move {
      * @returns {boolean} コマンドが終了していればtrue、実行中ならfalse
      */
     get done() {
-        return this.frame >= 20;
+        return this.frame >= fps;
     }
 }
 
@@ -153,38 +123,31 @@ class Item {
     * @param {number} y itemのy座標
     * @param {image} image itemの画像
     */
-    constructor(x, y, image) {
+    constructor(x, y, image, text) {
         this.x = x
         this.y = y
         this.image = image
+        this.text = text
     }
     draw(ctx) {
-        if (this.image && this.image.complete) {
-            ctx.drawImage(
-                this.image,
-                this.x * width + width / 10,
-                this.y * width + width / 10,
-                width * 8 / 10,
-                width * 8 / 10
-            )
-        } else {
-            // 画像が読み込まれていないときの仮
-            ctx.fillStyle = "red"
-            ctx.fillRect(
-                this.x * width + width / 6,
-                this.y * width + width / 6,
-                width * 2 / 3,
-                width * 2 / 3
-            )
-        }
+        ctx.drawImage(
+            this.image,
+            this.x * width + width / 10,
+            this.y * width + width / 10,
+            width * 4 / 5,
+            width * 4 / 5
+        )
     }
     act() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
-        let itemXY = [game.items[0].x, game.items[0].y]
-        if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
-            console.log("You can do this act.")
+        for (let k = 0; k < game.items.length; k++) {
+            let itemXY = [game.items[k].x, game.items[k].y]
+            if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
+                game.talking = game.items[k]
+                game.status = "reading"
+            }
         }
     }
 }
@@ -197,6 +160,10 @@ class Game {
         this.commands = [];
         this.items = [];
         this.item = new Item();
+        // moving,reading
+        this.status = "moving";
+        this.talking = null;
+        this.fonts = []
     }
 }
 let game;
@@ -206,33 +173,91 @@ window.onload = function () {
     game = new Game();
     setInterval(draw, 1000 / fps);
 
-    // 背景の画像を設定
+    setBackground()
+    setActors()
+    setItems()
+    setTextWindow()
+    setKeyActions()
+}
+
+function setBackground() {
     game.floorImage = new Image();
     game.floorImage.src = "./images/floor.png";
     game.wallImage = new Image();
     game.wallImage.src = "./images/wall.png"
     game.inventoryImage = new Image();
     game.inventoryImage.src = "./images/inventory.png"
+}
 
-    // playerを作る
+function setActors() {
     const playerImage = new Image();
     playerImage.src = "./images/kintoki.png";
-    let player = new Actor(3, 3, playerImage);
+    let player = new Actor(3, 2, playerImage);
     game.player = player;
-    // 初期配置のactor
-    game.actors = [player];
+    game.actors.push(player)
+}
 
-    // itemの作成
-    // const keyImage = new Image();
-    // keyImage.src = "./images/key.png"
-    // const key = new Item(2, 1, keyImage);
-    // game.items.push(key);
-    const ticketBlueImage = new Image();
+function setItems() {
+    // item(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
+    const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/ticketBlue.png"
-    const ticketBlue = new Item(3, 7, ticketBlueImage);
-    game.items.push(ticketBlue);
+    const ticketBlue = new Item(
+        3, 4, ticketBlueImage,
+        [[
+            "青い半券が落ちている",
+            "俺が記名したチケットだ"
+        ], [
+            "でもどうしてこんなところに",
+            "落ちているんだろう……"
+        ]]
+    );
+    game.items.push(ticketBlue)
+}
 
-    // キー入力がトリガーとなり移動が始まる
+function setTextWindow() {
+    game.textWindowImage = new Image();
+    game.textWindowImage.src = "./images/textWindow.png";
+    game.fonts.push(
+        new FontFace(
+            "dot",
+            "url(./fonts/Best10-FONT/BestTen-DOT.otf)"
+        )
+    )
+    for (let k = 0; k < game.fonts.length; k++) {
+        game.fonts[k].load().then(
+            () => {
+                document.fonts.add(game.fonts[k])
+                console.log("font : 「", game.fonts[k]["family"], "」 finish loading")
+            },
+            (err) => {
+                console.log("loading error")
+            }
+        )
+    }
+    game.readStarImage = new Image()
+    game.readStarImage.src = "./images/blueStar.png"
+    game.k = 0
+    game.fullText = null
+    game.nowText = null
+    game.textCount = 0
+    game.timer = 0
+}
+
+function resetText() {
+    if (game.k == game.talking.text[0].length-1) {
+        game.k = 0
+        game.status="moving"
+    } else {
+        game.k++
+    }
+    game.fullText = null
+    game.nowText = null
+    game.textCount = 0
+    game.timer = 0
+}
+
+function setKeyActions() {
+    // 移動
     document.addEventListener("keydown", (event) => {
         if (game.commands.length > 0) return;
         let move = {
@@ -246,9 +271,20 @@ window.onload = function () {
             game.commands.push(new Move(game.player, dxy[0], dxy[1]));
         }
     });
+    // 取得、進める等
     document.addEventListener("keydown", (event) => {
-        if (event.code === "Enter") {
-            game.item.act()
+        if (event.code === "Space") {
+            console.log("pressed space")
+            console.log("game.status:",game.status)
+            if (game.status === "moving") {
+                game.item.act()
+            }
+            if (game.status === "reading") {
+                game.textCount = game.talking.text[0][game.k].length
+            }
+            if (game.status === "readFinish") {
+                resetText()
+            }
         }
     });
 }
@@ -259,14 +295,13 @@ function draw() {
     const ctx = canvas.getContext("2d");
     moveActor()
 
-    if (canvas.getContext) {    // 描写に関係あるところをこの中に
-        drawClear(ctx)
-        drawFloorAndWall(ctx)
-        drawInventory(ctx)
-        drawItem(ctx)
-        drawActor(ctx)
-    } else { // 描画に関係ない部分をこの中に
-    }
+    drawClear(ctx)
+    drawFloorAndWall(ctx)
+    drawInventory(ctx)
+    drawItem(ctx)
+    drawActor(ctx)
+    drawText(ctx)
+
 }
 
 function moveActor() {
@@ -331,5 +366,62 @@ function drawItem(ctx) {
 function drawActor(ctx) {
     for (let k of game.actors) {
         k.draw(ctx)
+    }
+}
+
+function drawText(ctx) {
+    if (game.status === "reading"
+        || game.status === "readFinish") {
+        ctx.drawImage(
+            game.textWindowImage,
+            (1 / 4) * width,
+            (4 + 3 / 4) * width,
+            (game.map.lenX - 1 / 2) * width,
+            3 * width
+        )
+
+        ctx.fillStyle = "white"
+        ctx.font = "20px 'dot'";
+        for(let k=0;k<game.k;k++){
+            ctx.fillText(
+                game.talking.text[0][k],
+                width,
+                (5 + 3 / 4) * width + k * 30
+            )
+        }
+        if (game.fullText === null) {
+            game.fullText = game.talking.text[0][game.k]
+            game.nowText = ""
+            game.textCount = 0
+        } else if (game.textCount < game.talking.text[0][game.k].length) {
+            document.getElementById("SE").play()
+            game.nowText += game.fullText[game.textCount]
+            ctx.fillText(
+                game.nowText,
+                width,
+                (5 + 3 / 4) * width + game.k * 30
+            )
+            game.textCount++
+        } else {
+            ctx.fillText(
+                game.nowText,
+                width,
+                (5 + 3 / 4) * width + game.k * 30
+            )
+            if (game.timer == 0) {
+                console.log("game.k;",game.k)
+                game.status = "readFinish"
+            }
+            game.timer++
+            if (game.timer % fps < fps / 2) {
+                ctx.drawImage(
+                    game.readStarImage,
+                    (game.map.lenX - 3 / 2 + 1 / 4) * width,
+                    (6 + 1 / 2 + 1 / 4) * width,
+                    width / 2,
+                    width / 2
+                )
+            }
+        }
     }
 }
