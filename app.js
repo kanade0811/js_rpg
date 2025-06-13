@@ -45,7 +45,7 @@ class Actor {
     constructor(x, y, image) {
         this.x = x;
         this.y = y;
-        this.dir = -1;
+        this.dir = 3;
         this.image = image;
     }
     draw(ctx) {
@@ -145,9 +145,7 @@ class Item {
         for (let k = 0; k < game.items.length; k++) {
             let itemXY = [game.items[k].x, game.items[k].y]
             if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
-                console.log("You can action to this item.")
-                game.taking = game.items[k]
-                console.log(game.taking)
+                game.talking = game.items[k]
                 game.status = "reading"
             }
         }
@@ -162,9 +160,9 @@ class Game {
         this.commands = [];
         this.items = [];
         this.item = new Item();
-        // moving,taking,reading
+        // moving,reading
         this.status = "moving";
-        this.taking = null;
+        this.talking = null;
         this.fonts = []
     }
 }
@@ -236,10 +234,26 @@ function setTextWindow() {
             }
         )
     }
-    game.k=0
-    game.fullText=null
-    game.nowText=null
-    game.textCount=0
+    game.readStarImage = new Image()
+    game.readStarImage.src = "./images/blueStar.png"
+    game.k = 0
+    game.fullText = null
+    game.nowText = null
+    game.textCount = 0
+    game.timer = 0
+}
+
+function resetText() {
+    if (game.k == game.talking.text[0].length-1) {
+        game.k = 0
+        game.status="moving"
+    } else {
+        game.k++
+    }
+    game.fullText = null
+    game.nowText = null
+    game.textCount = 0
+    game.timer = 0
 }
 
 function setKeyActions() {
@@ -260,9 +274,16 @@ function setKeyActions() {
     // 取得、進める等
     document.addEventListener("keydown", (event) => {
         if (event.code === "Space") {
+            console.log("pressed space")
+            console.log("game.status:",game.status)
             if (game.status === "moving") {
                 game.item.act()
-                console.log("Next action is reading.")
+            }
+            if (game.status === "reading") {
+                game.textCount = game.talking.text[0][game.k].length
+            }
+            if (game.status === "readFinish") {
+                resetText()
             }
         }
     });
@@ -349,7 +370,8 @@ function drawActor(ctx) {
 }
 
 function drawText(ctx) {
-    if (game.status === "reading") {
+    if (game.status === "reading"
+        || game.status === "readFinish") {
         ctx.drawImage(
             game.textWindowImage,
             (1 / 4) * width,
@@ -360,28 +382,46 @@ function drawText(ctx) {
 
         ctx.fillStyle = "white"
         ctx.font = "20px 'dot'";
-        if (game.fullText ===null) {
-            game.fullText = game.taking.text[0][0]
+        for(let k=0;k<game.k;k++){
+            ctx.fillText(
+                game.talking.text[0][k],
+                width,
+                (5 + 3 / 4) * width + k * 30
+            )
+        }
+        if (game.fullText === null) {
+            game.fullText = game.talking.text[0][game.k]
             game.nowText = ""
             game.textCount = 0
-            console.log(game.fullText)
-            console.log("do")
-        }else if(game.textCount<game.taking.text[0][0].length){
-            console.log(game.textCount)
-            game.nowText +=game.fullText[game.textCount]
+        } else if (game.textCount < game.talking.text[0][game.k].length) {
+            document.getElementById("SE").play()
+            game.nowText += game.fullText[game.textCount]
             ctx.fillText(
                 game.nowText,
                 width,
                 (5 + 3 / 4) * width + game.k * 30
             )
             game.textCount++
-        }else{
+        } else {
             ctx.fillText(
                 game.nowText,
                 width,
                 (5 + 3 / 4) * width + game.k * 30
             )
-            console.log(game.nowText)
+            if (game.timer == 0) {
+                console.log("game.k;",game.k)
+                game.status = "readFinish"
+            }
+            game.timer++
+            if (game.timer % fps < fps / 2) {
+                ctx.drawImage(
+                    game.readStarImage,
+                    (game.map.lenX - 3 / 2 + 1 / 4) * width,
+                    (6 + 1 / 2 + 1 / 4) * width,
+                    width / 2,
+                    width / 2
+                )
+            }
         }
     }
 }
