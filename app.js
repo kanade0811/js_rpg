@@ -49,34 +49,13 @@ class Actor {
         this.image = image;
     }
     draw(ctx) {
-        if (this.image && this.image.complete) {
-            ctx.drawImage(
-                this.image,
-                this.x * width,
-                this.y * width,
-                width,
-                width
-            )
-        } else {
-            // 画像が読み込まれていないときの仮
-            ctx.fillStyle = "blue"
-
-            let rad = Math.PI / 2 * this.dir
-            ctx.beginPath();
-            ctx.moveTo(
-                width * (this.x + 1 / 2 + Math.cos(rad) / 2),
-                width * (this.y + 1 / 2 - Math.sin(rad) / 2)
-            );
-            ctx.lineTo(
-                width * (this.x + 1 / 2 + Math.cos(rad) / 2) + 2 / Math.sqrt(3) * width * 0.7 * Math.cos(rad + 5 / 6 * Math.PI),
-                width * (this.y + 1 / 2 - Math.sin(rad) / 2) - 2 / Math.sqrt(3) * width * 0.7 * Math.sin(rad + 5 / 6 * Math.PI)
-            );
-            ctx.lineTo(
-                width * (this.x + 1 / 2 + Math.cos(rad) / 2) + 2 / Math.sqrt(3) * width * 0.7 * Math.cos(rad + 7 / 6 * Math.PI),
-                width * (this.y + 1 / 2 - Math.sin(rad) / 2) - 2 / Math.sqrt(3) * width * 0.7 * Math.sin(rad + 7 / 6 * Math.PI)
-            );
-            ctx.fill();
-        }
+        ctx.drawImage(
+            this.image,
+            this.x * width,
+            this.y * width,
+            width,
+            width
+        )
     }
 }
 
@@ -151,24 +130,13 @@ class Item {
         this.text = text
     }
     draw(ctx) {
-        if (this.image && this.image.complete) {
-            ctx.drawImage(
-                this.image,
-                this.x * width + width / 10,
-                this.y * width + width / 10,
-                width * 8 / 10,
-                width * 8 / 10
-            )
-        } else {
-            // 画像が読み込まれていないときの仮
-            ctx.fillStyle = "red"
-            ctx.fillRect(
-                this.x * width + width / 6,
-                this.y * width + width / 6,
-                width * 2 / 3,
-                width * 2 / 3
-            )
-        }
+        ctx.drawImage(
+            this.image,
+            this.x * width + width / 10,
+            this.y * width + width / 10,
+            width * 4 / 5,
+            width * 4 / 5
+        )
     }
     act() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
@@ -177,8 +145,10 @@ class Item {
         for (let k = 0; k < game.items.length; k++) {
             let itemXY = [game.items[k].x, game.items[k].y]
             if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
+                console.log("You can action to this item.")
                 game.taking = game.items[k]
-                game.status = "taking"
+                console.log(game.taking)
+                game.status = "reading"
             }
         }
     }
@@ -192,7 +162,7 @@ class Game {
         this.commands = [];
         this.items = [];
         this.item = new Item();
-        // moving,taking
+        // moving,taking,reading
         this.status = "moving";
         this.taking = null;
         this.fonts = []
@@ -212,7 +182,7 @@ window.onload = function () {
     setKeyActions()
 }
 
-function setBackground(){
+function setBackground() {
     game.floorImage = new Image();
     game.floorImage.src = "./images/floor.png";
     game.wallImage = new Image();
@@ -221,7 +191,7 @@ function setBackground(){
     game.inventoryImage.src = "./images/inventory.png"
 }
 
-function setActors(){
+function setActors() {
     const playerImage = new Image();
     playerImage.src = "./images/kintoki.png";
     let player = new Actor(3, 2, playerImage);
@@ -229,23 +199,24 @@ function setActors(){
     game.actors.push(player)
 }
 
-function setItems(){
+function setItems() {
+    // item(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/ticketBlue.png"
     const ticketBlue = new Item(
         3, 4, ticketBlueImage,
         [[
-            ["青い半券が落ちている"],
-            ["俺が記名したチケットだ"]
+            "青い半券が落ちている",
+            "俺が記名したチケットだ"
         ], [
-            ["でもどうしてこんなところに"],
-            ["落ちているんだろう……"]
+            "でもどうしてこんなところに",
+            "落ちているんだろう……"
         ]]
     );
     game.items.push(ticketBlue)
 }
 
-function setTextWindow(){
+function setTextWindow() {
     game.textWindowImage = new Image();
     game.textWindowImage.src = "./images/textWindow.png";
     game.fonts.push(
@@ -265,9 +236,13 @@ function setTextWindow(){
             }
         )
     }
+    game.k=0
+    game.fullText=null
+    game.nowText=null
+    game.textCount=0
 }
 
-function setKeyActions(){
+function setKeyActions() {
     // 移動
     document.addEventListener("keydown", (event) => {
         if (game.commands.length > 0) return;
@@ -285,8 +260,9 @@ function setKeyActions(){
     // 取得、進める等
     document.addEventListener("keydown", (event) => {
         if (event.code === "Space") {
-            if (game.status = "moving") {
+            if (game.status === "moving") {
                 game.item.act()
+                console.log("Next action is reading.")
             }
         }
     });
@@ -373,7 +349,7 @@ function drawActor(ctx) {
 }
 
 function drawText(ctx) {
-    if (game.status == "taking") {
+    if (game.status === "reading") {
         ctx.drawImage(
             game.textWindowImage,
             (1 / 4) * width,
@@ -384,13 +360,28 @@ function drawText(ctx) {
 
         ctx.fillStyle = "white"
         ctx.font = "20px 'dot'";
-        for(let k=0;k<game.taking.text[0].length;k++){
+        if (game.fullText ===null) {
+            game.fullText = game.taking.text[0][0]
+            game.nowText = ""
+            game.textCount = 0
+            console.log(game.fullText)
+            console.log("do")
+        }else if(game.textCount<game.taking.text[0][0].length){
+            console.log(game.textCount)
+            game.nowText +=game.fullText[game.textCount]
             ctx.fillText(
-                game.taking.text[0][k],
+                game.nowText,
                 width,
-                (5+3/4) * width+k*30
+                (5 + 3 / 4) * width + game.k * 30
             )
+            game.textCount++
+        }else{
+            ctx.fillText(
+                game.nowText,
+                width,
+                (5 + 3 / 4) * width + game.k * 30
+            )
+            console.log(game.nowText)
         }
-
     }
 }
