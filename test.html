@@ -1,39 +1,11 @@
-<!DOCTYPE html>
-<html lang="jp">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+<canvas id="canvas" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-    <button popovertarget="test-pop">
-        push me
-    </button>
-    <div popober id="test-pop">
-        ここに発言を追加
-    </div>
-    <style>
-        #test-pop{
-            padding:3rem;
-            box-shadow: 0px,4px,4px,-2px;
-            border-radius: 1rem;
-        }
-    </style>
-
-    <audio controls src="./SE/文字送りaループ用.mp3">
-    </audio>
-
-    <div class="btn" onclick="audio()">音がなるよ!!</div>
-    <audio id="btn_audio">
-    <source src="./audio/btn_audio.mp3" type="audio/mp3">
-    </audio>
-    <script>
-        function audio() {
-        document.getElementById('btn_audio').currentTime = 0; //連続クリックに対応
-        document.getElementById('btn_audio').play(); //クリックしたら音を再生
-}
-
-    </script>
-</body>
-</html>
+const img = new Image();
+img.src = "./images/background/textWindow.png";
+img.onload = () => {
+    ctx.drawImage(img, 100, 100, 300, 100);
+};
+</script>
