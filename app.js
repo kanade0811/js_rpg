@@ -96,7 +96,7 @@ class Move {
                 this.frame = 20;
                 return this.done;
             }
-            for (let k of game.items) {
+            for (let k of game.events) {
                 if ((this.endX == k.x) && (this.endY == k.y)) {
                     this.frame = 20;
                     return this.done;
@@ -117,11 +117,11 @@ class Move {
     }
 }
 
-class Item {
+class Event {
     /**
-    * @param {number} x itemのx座標
-    * @param {number} y itemのy座標
-    * @param {image} image itemの画像
+    * @param {number} x eventのx座標
+    * @param {number} y eventのy座標
+    * @param {image} image eventの画像
     */
     constructor(x, y, image, text) {
         this.x = x
@@ -130,22 +130,24 @@ class Item {
         this.text = text
     }
     draw(ctx) {
-        ctx.drawImage(
-            this.image,
-            this.x * width + width / 10,
-            this.y * width + width / 10,
-            width * 4 / 5,
-            width * 4 / 5
-        )
+        if (this.image !== null) {
+            ctx.drawImage(
+                this.image,
+                this.x * width + width / 10,
+                this.y * width + width / 10,
+                width * 4 / 5,
+                width * 4 / 5
+            )
+        }
     }
     act() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
-        for (let k = 0; k < game.items.length; k++) {
-            let itemXY = [game.items[k].x, game.items[k].y]
-            if (playerXY[0] === itemXY[0] && playerXY[1] === itemXY[1]) {
-                game.talking = game.items[k]
+        for (let k = 0; k < game.events.length; k++) {
+            let eventXY = [game.events[k].x, game.events[k].y]
+            if (playerXY[0] === eventXY[0] && playerXY[1] === eventXY[1]) {
+                game.talking = game.events[k]
                 game.status = "reading"
             }
         }
@@ -158,10 +160,11 @@ class Game {
         this.player = null;
         this.actors = [];
         this.commands = [];
-        this.items = [];
-        this.item = new Item();
-        // moving,reading
+        this.events = [];
+        this.event = new Event();
+        // scene,moving,reading
         this.status = "moving";
+        this.opacity = 1
         this.talking = null;
         this.fonts = []
     }
@@ -175,7 +178,7 @@ window.onload = function () {
 
     setBackground()
     setActors()
-    setItems()
+    setEvents()
     setTextWindow()
     setKeyActions()
 }
@@ -192,16 +195,31 @@ function setBackground() {
 function setActors() {
     const playerImage = new Image();
     playerImage.src = "./images/actors/kintoki.png";
-    let player = new Actor(3, 2, playerImage);
+    let player = new Actor(3, 3, playerImage);
     game.player = player;
     game.actors.push(player)
 }
 
-function setItems() {
-    // item(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
+function setEvents() {
+    // event(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
+    const whereIsHear = new Event(
+        0, 0, null,
+        [[
+            "あれ、俺、なんでこんなところに……？",
+            "確か、DAYDREAM CIRCUSって名前の",
+            "移動式サーカスのチケットを貰って、……"
+        ], [
+            "……ここにいる理由が思い出せないなぁ"
+        ], [
+            "もうそろそろ帰りたいんだけど……？"
+        ]
+
+        ]
+    )
+    game.events.push(whereIsHear)
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
-    const ticketBlue = new Item(
+    const ticketBlue = new Event(
         3, 4, ticketBlueImage,
         [[
             "青い半券が落ちている",
@@ -211,49 +229,33 @@ function setItems() {
             "落ちているんだろう……"
         ]]
     );
-    game.items.push(ticketBlue)
+    game.events.push(ticketBlue)
 }
 
 function setTextWindow() {
-    game.textWindowImage = new Image();
-    game.textWindowImage.src = "./images/background/textWindow.png";
     game.fonts.push(
         new FontFace(
             "dot",
             "url(./fonts/Best10-FONT/BestTen-DOT.otf)"
         )
     )
-    for (let k = 0; k < game.fonts.length; k++) {
-        game.fonts[k].load().then(
-            () => {
-                document.fonts.add(game.fonts[k])
-                console.log("font : 「", game.fonts[k]["family"], "」 finish loading")
-            },
-            (err) => {
-                console.log("loading error")
-            }
-        )
-    }
-    game.readStarImage = new Image()
-    game.readStarImage.src = "./images/background/blueStar.png"
-    game.k = 0
-    game.fullText = null
-    game.nowText = null
-    game.textCount = 0
-    game.timer = 0
+    game.textWindowImage = new Image();
+    game.textWindowImage.src = "./images/background/textWindow.png";
+    game.textStarImage = new Image()
+    game.textStarImage.src = "./images/background/blueStar.png"
 }
 
 function resetText() {
-    if (game.k == game.talking.text[0].length-1) {
-        game.k = 0
-        game.status="moving"
+    if (text.k == game.talking.text[0].length - 1) {
+        text.k = 0
+        game.status = "moving"
     } else {
-        game.k++
+        text.k++
     }
-    game.fullText = null
-    game.nowText = null
-    game.textCount = 0
-    game.timer = 0
+    text.full = null
+    text.now = null
+    text.count = 0
+    text.timer = 0
 }
 
 function setKeyActions() {
@@ -275,14 +277,13 @@ function setKeyActions() {
     document.addEventListener("keydown", (event) => {
         if (event.code === "Space") {
             console.log("pressed space")
-            console.log("game.status:",game.status)
+            console.log("game.status:", game.status)
             if (game.status === "moving") {
-                game.item.act()
-            }
-            if (game.status === "reading") {
-                game.textCount = game.talking.text[0][game.k].length
-            }
-            if (game.status === "readFinish") {
+                game.event.act()
+            }else if (game.status === "reading") {
+                text.count = game.talking.text[text.k].length
+                console.log(game.talking.text[0][text.k].length)
+            }else if (game.status === "readFinish") {
                 resetText()
             }
         }
@@ -298,9 +299,12 @@ function draw() {
     drawClear(ctx)
     drawFloorAndWall(ctx)
     drawInventory(ctx)
-    drawItem(ctx)
+    drawEvent(ctx)
     drawActor(ctx)
     drawText(ctx)
+    if (game.status === "scene") {
+        sceneFadeout(ctx)
+    }
 
 }
 
@@ -357,8 +361,8 @@ function drawInventory(ctx) {
     }
 }
 
-function drawItem(ctx) {
-    for (let k of game.items) {
+function drawEvent(ctx) {
+    for (let k of game.events) {
         k.draw(ctx)
     }
 }
@@ -370,8 +374,7 @@ function drawActor(ctx) {
 }
 
 function drawText(ctx) {
-    if (game.status === "reading"
-        || game.status === "readFinish") {
+    if (game.status === "reading" || game.status === "readFinish") {
         ctx.drawImage(
             game.textWindowImage,
             (1 / 4) * width,
@@ -382,40 +385,41 @@ function drawText(ctx) {
 
         ctx.fillStyle = "white"
         ctx.font = "20px 'dot'";
-        for(let k=0;k<game.k;k++){
+        for (let k = 0; k < text.k; k++) {
             ctx.fillText(
                 game.talking.text[0][k],
                 width,
                 (5 + 3 / 4) * width + k * 30
             )
         }
-        if (game.fullText === null) {
-            game.fullText = game.talking.text[0][game.k]
-            game.nowText = ""
-            game.textCount = 0
-        } else if (game.textCount < game.talking.text[0][game.k].length) {
+        if (text.full === null) {
+            text.full = game.talking.text[0][text.k]
+            text.now = ""
+            text.count = 0
+        } else if (text.count < game.talking.text[0][text.k].length) {
             document.getElementById("SE").play()
-            game.nowText += game.fullText[game.textCount]
+            text.now += text.full[text.count]
+            console.log(text.count,text.now)
             ctx.fillText(
-                game.nowText,
+                text.now,
                 width,
-                (5 + 3 / 4) * width + game.k * 30
+                (5 + 3 / 4) * width + text.k * 30
             )
-            game.textCount++
+            text.count++
         } else {
             ctx.fillText(
-                game.nowText,
+                text.now,
                 width,
-                (5 + 3 / 4) * width + game.k * 30
+                (5 + 3 / 4) * width + text.k * 30
             )
-            if (game.timer == 0) {
-                console.log("game.k;",game.k)
+            if (text.timer == 0) {
+                console.log("text.k;", text.k)
                 game.status = "readFinish"
             }
-            game.timer++
-            if (game.timer % fps < fps / 2) {
+            text.timer++
+            if (text.timer % fps < fps / 2) {
                 ctx.drawImage(
-                    game.readStarImage,
+                    game.textStarImage,
                     (game.map.lenX - 3 / 2 + 1 / 4) * width,
                     (6 + 1 / 2 + 1 / 4) * width,
                     width / 2,
@@ -424,4 +428,31 @@ function drawText(ctx) {
             }
         }
     }
+}
+
+function sceneFadeout(ctx) {
+    game.opacity -= 1 / fps
+    ctx.globalAlpha = game.opacity
+    ctx.fillStyle = "black"
+    ctx.fillRect(
+        0,
+        0,
+        game.map.lenX * width,
+        game.map.lenY * width
+    )
+    ctx.globalAlpha = 1
+    if (game.opacity < 0) {
+        game.opacity = 0
+        console.log("finish fadeout")
+        game.status = "talking"
+        game.text = new Text(game.events[0])
+    }
+}
+
+let text = {
+    k: 0,
+    full: null,
+    now: null,
+    count: 0,
+    timer: 0
 }
