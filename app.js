@@ -182,16 +182,16 @@ window.onload = function () {
 
 function setBackground() {
     game.floorImage = new Image();
-    game.floorImage.src = "./images/floor.png";
+    game.floorImage.src = "./images/background/floor.png";
     game.wallImage = new Image();
-    game.wallImage.src = "./images/wall.png"
+    game.wallImage.src = "./images/background/wall.png"
     game.inventoryImage = new Image();
-    game.inventoryImage.src = "./images/inventory.png"
+    game.inventoryImage.src = "./images/background/inventory.png"
 }
 
 function setActors() {
     const playerImage = new Image();
-    playerImage.src = "./images/kintoki.png";
+    playerImage.src = "./images/actors/kintoki.png";
     let player = new Actor(3, 2, playerImage);
     game.player = player;
     game.actors.push(player)
@@ -200,7 +200,7 @@ function setActors() {
 function setItems() {
     // item(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
     const ticketBlueImage = new Image()
-    ticketBlueImage.src = "./images/ticketBlue.png"
+    ticketBlueImage.src = "./images/events/ticketBlue.png"
     const ticketBlue = new Item(
         3, 4, ticketBlueImage,
         [[
@@ -216,7 +216,7 @@ function setItems() {
 
 function setTextWindow() {
     game.textWindowImage = new Image();
-    game.textWindowImage.src = "./images/textWindow.png";
+    game.textWindowImage.src = "./images/background/textWindow.png";
     game.fonts.push(
         new FontFace(
             "dot",
@@ -235,7 +235,7 @@ function setTextWindow() {
         )
     }
     game.readStarImage = new Image()
-    game.readStarImage.src = "./images/blueStar.png"
+    game.readStarImage.src = "./images/background/blueStar.png"
     game.k = 0
     game.fullText = null
     game.nowText = null
