@@ -1,5 +1,5 @@
 // 環境変数
-const fps = 30;
+const fps = 20;
 
 class Map {
     constructor() {
@@ -87,18 +87,18 @@ class Move {
             this.beginY = this.actor.y;
             this.endX = this.actor.x + this.dx;
             this.endY = this.actor.y + this.dy;
-            if (this.dx == 1) this.actor.dir = 0;
-            if (this.dy == -1) this.actor.dir = 1;
-            if (this.dx == -1) this.actor.dir = 2;
-            if (this.dy == 1) this.actor.dir = 3;
+            if (this.dx === 1) this.actor.dir = 0;
+            if (this.dy === -1) this.actor.dir = 1;
+            if (this.dx === -1) this.actor.dir = 2;
+            if (this.dy === 1) this.actor.dir = 3;
             //移動不可なら実行済みにして終了
             if (!(game.map.isWalkable(this.endX, this.endY))) {
-                this.frame = 20;
+                this.frame = fps;
                 return this.done;
             }
             for (let k of game.events) {
-                if ((this.endX == k.x) && (this.endY == k.y)) {
-                    this.frame = 20;
+                if ((this.endX === k.x) && (this.endY === k.y)) {
+                    this.frame = fps;
                     return this.done;
                 }
             }
@@ -122,6 +122,7 @@ class Event {
     * @param {number} x eventのx座標
     * @param {number} y eventのy座標
     * @param {image} image eventの画像
+    * @param {strings} text eventの持つtext
     */
     constructor(x, y, image, text) {
         this.x = x
@@ -147,8 +148,9 @@ class Event {
         for (let k = 0; k < game.events.length; k++) {
             let eventXY = [game.events[k].x, game.events[k].y]
             if (playerXY[0] === eventXY[0] && playerXY[1] === eventXY[1]) {
-                game.talking = game.events[k]
-                game.status = "reading"
+                text.talking = game.events[k]
+                console.log(text.talking)
+                game.status = "talking"
             }
         }
     }
@@ -163,7 +165,7 @@ class Game {
         this.events = [];
         this.event = new Event();
         // scene,moving,reading
-        this.status = "moving";
+        this.status = "scene";
         this.opacity = 1
         this.talking = null;
         this.fonts = []
@@ -195,28 +197,13 @@ function setBackground() {
 function setActors() {
     const playerImage = new Image();
     playerImage.src = "./images/actors/kintoki.png";
-    let player = new Actor(3, 3, playerImage);
+    let player = new Actor(3, 2, playerImage);
     game.player = player;
     game.actors.push(player)
 }
 
 function setEvents() {
     // event(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
-    const whereIsHear = new Event(
-        0, 0, null,
-        [[
-            "あれ、俺、なんでこんなところに……？",
-            "確か、DAYDREAM CIRCUSって名前の",
-            "移動式サーカスのチケットを貰って、……"
-        ], [
-            "……ここにいる理由が思い出せないなぁ"
-        ], [
-            "もうそろそろ帰りたいんだけど……？"
-        ]
-
-        ]
-    )
-    game.events.push(whereIsHear)
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
     const ticketBlue = new Event(
@@ -226,7 +213,7 @@ function setEvents() {
             "俺が記名したチケットだ"
         ], [
             "でもどうしてこんなところに",
-            "落ちているんだろう……"
+            "落ちているんだろう……？"
         ]]
     );
     game.events.push(ticketBlue)
@@ -246,11 +233,28 @@ function setTextWindow() {
 }
 
 function resetText() {
-    if (text.k == game.talking.text[0].length - 1) {
-        text.k = 0
-        game.status = "moving"
+    if (text.n === text.talking.text[text.m].length-1) {
+        console.log(text.m)
+        console.log(text.talking.text.length)
+        if (text.m < text.talking.text.length-1) {
+            text.m++
+            game.status="talking"
+        } else {
+            text = {
+                talking: null,
+                m: 0,
+                n: 0,
+                full: null,
+                now: null,
+                count: 0,
+                timer: 0
+            }
+            game.status = "moving"
+        }
+        text.n = 0
     } else {
-        text.k++
+        text.n++
+        game.status="talking"
     }
     text.full = null
     text.now = null
@@ -280,11 +284,13 @@ function setKeyActions() {
             console.log("game.status:", game.status)
             if (game.status === "moving") {
                 game.event.act()
-            }else if (game.status === "reading") {
-                text.count = game.talking.text[text.k].length
-                console.log(game.talking.text[0][text.k].length)
-            }else if (game.status === "readFinish") {
+            } else if (game.status === "talkFinish") {
+                console.log(text)
                 resetText()
+                console.log(text)
+            } else if (game.status === "talking") {
+                text.count = text.talking.text[text.m][text.n].length
+                text.timer=0
             }
         }
     });
@@ -305,7 +311,6 @@ function draw() {
     if (game.status === "scene") {
         sceneFadeout(ctx)
     }
-
 }
 
 function moveActor() {
@@ -374,7 +379,7 @@ function drawActor(ctx) {
 }
 
 function drawText(ctx) {
-    if (game.status === "reading" || game.status === "readFinish") {
+    if (game.status === "talking" || game.status === "talkFinish") {
         ctx.drawImage(
             game.textWindowImage,
             (1 / 4) * width,
@@ -385,36 +390,35 @@ function drawText(ctx) {
 
         ctx.fillStyle = "white"
         ctx.font = "20px 'dot'";
-        for (let k = 0; k < text.k; k++) {
+        for (let k = 0; k < text.n; k++) {
             ctx.fillText(
-                game.talking.text[0][k],
+                text.talking.text[text.m][k],
                 width,
                 (5 + 3 / 4) * width + k * 30
             )
         }
         if (text.full === null) {
-            text.full = game.talking.text[0][text.k]
+            text.full = text.talking.text[text.m][text.n]
             text.now = ""
             text.count = 0
-        } else if (text.count < game.talking.text[0][text.k].length) {
+        } else if (text.count < text.talking.text[text.m][text.n].length) {
             document.getElementById("SE").play()
             text.now += text.full[text.count]
-            console.log(text.count,text.now)
             ctx.fillText(
                 text.now,
                 width,
-                (5 + 3 / 4) * width + text.k * 30
+                (5 + 3 / 4) * width + text.n * 30
             )
             text.count++
-        } else {
+            console.log(text.now)
+        } else if(text.count===text.talking.text[text.m][text.n].length){
             ctx.fillText(
-                text.now,
+                text.full,
                 width,
-                (5 + 3 / 4) * width + text.k * 30
+                (5 + 3 / 4) * width + text.n * 30
             )
             if (text.timer == 0) {
-                console.log("text.k;", text.k)
-                game.status = "readFinish"
+                game.status = "talkFinish"
             }
             text.timer++
             if (text.timer % fps < fps / 2) {
@@ -432,27 +436,50 @@ function drawText(ctx) {
 
 function sceneFadeout(ctx) {
     game.opacity -= 1 / fps
-    ctx.globalAlpha = game.opacity
-    ctx.fillStyle = "black"
-    ctx.fillRect(
-        0,
-        0,
-        game.map.lenX * width,
-        game.map.lenY * width
-    )
-    ctx.globalAlpha = 1
-    if (game.opacity < 0) {
-        game.opacity = 0
+    if(game.opacity>=0){
+        ctx.globalAlpha = game.opacity
+        ctx.fillStyle = "black"
+        ctx.fillRect(
+            0,
+            0,
+            game.map.lenX * width,
+            game.map.lenY * width
+        )
+        ctx.globalAlpha = 1
+    }else {
+        game.opacity = 1
         console.log("finish fadeout")
         game.status = "talking"
-        game.text = new Text(game.events[0])
+        where()
     }
 }
 
 let text = {
-    k: 0,
+    talking: null,
+    m: 0,
+    n: 0,
     full: null,
     now: null,
     count: 0,
     timer: 0
+}
+
+let schedule = {
+    whereIsHear:{text:
+        [[
+            "あれ、俺、なんでこんなところに……？",
+            "確か、DAYDREAM CIRCUSって名前の",
+            "移動式サーカスのチケットを貰って……"
+        ], [
+            "……ここにいる理由が思い出せないなぁ"
+        ], [
+            "もうそろそろ帰りたいんだけど……？"
+        ]]
+    }
+}
+
+function where() {
+    text.talking = schedule.whereIsHear
+    game.status = "talking"
+    console.log("set text")
 }
