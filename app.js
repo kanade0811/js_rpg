@@ -5,18 +5,19 @@ class Map {
     constructor() {
         // マップの配列、床は0,壁は1,アイテムは2
         this.tiles = [
-            1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 0, 0, 0, 0, 1, 1,
-            1, 0, 0, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 0, 0, 0, 1,
-            1, 1, 0, 0, 0, 0, 1, 1,
-            1, 1, 1, 0, 0, 1, 1, 1
+            1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 0, 0, 0, 0, 0, 1, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 0, 0, 0, 0, 0, 0, 0, 1,
+            1, 1, 0, 0, 0, 0, 0, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1
         ];
         // 縦と横の長さ
-        this.lenX = 8;
-        this.lenY = 8;
+        this.lenX = 9;
+        this.lenY = 9;
     }
 
     /**
@@ -131,15 +132,22 @@ class Event {
         this.text = text
     }
     draw(ctx) {
-        if (this.image !== null) {
-            ctx.drawImage(
-                this.image,
-                this.x * width + width / 10,
-                this.y * width + width / 10,
-                width * 4 / 5,
-                width * 4 / 5
-            )
-        }
+        ctx.drawImage(
+            this.image,
+            this.x * width + width / 10,
+            this.y * width + width / 10,
+            width * 4 / 5,
+            width * 4 / 5
+        )
+    }
+    drawDoor(ctx){
+        ctx.drawImage(
+            this.image,
+            this.x * width+width*3/16,
+            this.y * width,
+            width*5/8,
+            width
+        )
     }
     act() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
@@ -149,7 +157,6 @@ class Event {
             let eventXY = [game.events[k].x, game.events[k].y]
             if (playerXY[0] === eventXY[0] && playerXY[1] === eventXY[1]) {
                 text.talking = game.events[k]
-                console.log(text.talking)
                 game.status = "talking"
             }
         }
@@ -165,7 +172,7 @@ class Game {
         this.events = [];
         this.event = new Event();
         // scene,moving,reading
-        this.status = "scene";
+        this.status = "moving";
         this.opacity = 1
         this.talking = null;
         this.fonts = []
@@ -204,6 +211,20 @@ function setActors() {
 
 function setEvents() {
     // event(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
+    const doorImage = new Image()
+    doorImage.src = "./images/events/door.png"
+    const door = new Event(
+        4, 8, doorImage,
+        [[
+            "あれ、ドアの鍵が閉まってるみたい",
+            "……ってことは、閉じ込められてる？"
+        ], [
+            "どうしよう、どうしよう……",
+            "帰れないと困っちゃうんだけど……！"
+        ]]
+    )
+    game.events.push(door)
+
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
     const ticketBlue = new Event(
@@ -233,12 +254,10 @@ function setTextWindow() {
 }
 
 function resetText() {
-    if (text.n === text.talking.text[text.m].length-1) {
-        console.log(text.m)
-        console.log(text.talking.text.length)
-        if (text.m < text.talking.text.length-1) {
+    if (text.n === text.talking.text[text.m].length - 1) {
+        if (text.m < text.talking.text.length - 1) {
             text.m++
-            game.status="talking"
+            game.status = "talking"
         } else {
             text = {
                 talking: null,
@@ -254,7 +273,7 @@ function resetText() {
         text.n = 0
     } else {
         text.n++
-        game.status="talking"
+        game.status = "talking"
     }
     text.full = null
     text.now = null
@@ -280,23 +299,19 @@ function setKeyActions() {
     // 取得、進める等
     document.addEventListener("keydown", (event) => {
         if (event.code === "Space") {
-            console.log("pressed space")
-            console.log("game.status:", game.status)
             if (game.status === "moving") {
                 game.event.act()
             } else if (game.status === "talkFinish") {
-                console.log(text)
                 resetText()
-                console.log(text)
             } else if (game.status === "talking") {
                 text.count = text.talking.text[text.m][text.n].length
-                text.timer=0
+                text.timer = 0
             }
         }
     });
 }
 
-const width = 60
+const width = 50
 function draw() {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -367,8 +382,12 @@ function drawInventory(ctx) {
 }
 
 function drawEvent(ctx) {
-    for (let k of game.events) {
-        k.draw(ctx)
+    for(let k in game.events){
+        if(k==0){
+            game.events[k].drawDoor(ctx)
+        }else{
+            game.events[k].draw(ctx)
+        }
     }
 }
 
@@ -383,7 +402,7 @@ function drawText(ctx) {
         ctx.drawImage(
             game.textWindowImage,
             (1 / 4) * width,
-            (4 + 3 / 4) * width,
+            (5 + 3 / 4) * width,
             (game.map.lenX - 1 / 2) * width,
             3 * width
         )
@@ -394,7 +413,7 @@ function drawText(ctx) {
             ctx.fillText(
                 text.talking.text[text.m][k],
                 width,
-                (5 + 3 / 4) * width + k * 30
+                (6 + 3 / 4) * width + k * 30
             )
         }
         if (text.full === null) {
@@ -402,20 +421,19 @@ function drawText(ctx) {
             text.now = ""
             text.count = 0
         } else if (text.count < text.talking.text[text.m][text.n].length) {
-            document.getElementById("SE").play()
+            document.getElementById("text").play()
             text.now += text.full[text.count]
             ctx.fillText(
                 text.now,
                 width,
-                (5 + 3 / 4) * width + text.n * 30
+                (6 + 3 / 4) * width + text.n * 30
             )
             text.count++
-            console.log(text.now)
-        } else if(text.count===text.talking.text[text.m][text.n].length){
+        } else if (text.count === text.talking.text[text.m][text.n].length) {
             ctx.fillText(
                 text.full,
                 width,
-                (5 + 3 / 4) * width + text.n * 30
+                (6 + 3 / 4) * width + text.n * 30
             )
             if (text.timer == 0) {
                 game.status = "talkFinish"
@@ -425,7 +443,7 @@ function drawText(ctx) {
                 ctx.drawImage(
                     game.textStarImage,
                     (game.map.lenX - 3 / 2 + 1 / 4) * width,
-                    (6 + 1 / 2 + 1 / 4) * width,
+                    (7 + 3 / 4) * width,
                     width / 2,
                     width / 2
                 )
@@ -436,7 +454,7 @@ function drawText(ctx) {
 
 function sceneFadeout(ctx) {
     game.opacity -= 1 / fps
-    if(game.opacity>=0){
+    if (game.opacity >= 0) {
         ctx.globalAlpha = game.opacity
         ctx.fillStyle = "black"
         ctx.fillRect(
@@ -446,7 +464,7 @@ function sceneFadeout(ctx) {
             game.map.lenY * width
         )
         ctx.globalAlpha = 1
-    }else {
+    } else {
         game.opacity = 1
         console.log("finish fadeout")
         game.status = "talking"
@@ -465,8 +483,8 @@ let text = {
 }
 
 let schedule = {
-    whereIsHear:{text:
-        [[
+    whereIsHear: {
+        text: [[
             "あれ、俺、なんでこんなところに……？",
             "確か、DAYDREAM CIRCUSって名前の",
             "移動式サーカスのチケットを貰って……"
@@ -481,5 +499,11 @@ let schedule = {
 function where() {
     text.talking = schedule.whereIsHear
     game.status = "talking"
-    console.log("set text")
+}
+
+function door(){
+    /* ドアを開けてから実行するプログラム
+    ・今のactor,eventsを消す
+    ・新しいactor,eventsを作る
+    */
 }
