@@ -49,7 +49,7 @@ class Actor {
         this.dir = 3;
         this.image = image;
     }
-    draw(ctx) {
+    draw() {
         ctx.drawImage(
             this.image,
             this.x * width,
@@ -131,7 +131,7 @@ class Event {
         this.image = image
         this.text = text
     }
-    draw(ctx) {
+    draw() {
         ctx.drawImage(
             this.image,
             this.x * width + width / 10,
@@ -140,7 +140,7 @@ class Event {
             width * 4 / 5
         )
     }
-    drawDoor(ctx){
+    drawDoor(){
         ctx.drawImage(
             this.image,
             this.x * width+width*3/16,
@@ -312,19 +312,19 @@ function setKeyActions() {
 }
 
 const width = 50
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 function draw() {
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
     moveActor()
 
-    drawClear(ctx)
-    drawFloorAndWall(ctx)
-    drawInventory(ctx)
-    drawEvent(ctx)
-    drawActor(ctx)
-    drawText(ctx)
+    drawClear()
+    drawFloorAndWall()
+    drawInventory()
+    drawEvent()
+    drawActor()
+    drawText()
     if (game.status === "scene") {
-        sceneFadeout(ctx)
+        sceneFadeout()
     }
 }
 
@@ -336,11 +336,11 @@ function moveActor() {
     game.commands = game.commands.filter(c => !c.done);
 }
 
-function drawClear(ctx) {
+function drawClear() {
     ctx.clearRect(0, 0, game.map.lenX * width, (game.map.lenY + 2) * width)
 }
 
-function drawFloorAndWall(ctx) {
+function drawFloorAndWall() {
     for (let y = 0; y < game.map.lenY; y++) {
         for (let x = 0; x < game.map.lenX; x++) {
             let tile = game.map.tileAt(x, y);
@@ -365,7 +365,7 @@ function drawFloorAndWall(ctx) {
     }
 }
 
-function drawInventory(ctx) {
+function drawInventory() {
     const y = game.map.lenY + 1
     ctx.strokeStyle = "brown";
     for (let x = 0; x < game.map.lenX; x++) {
@@ -381,23 +381,23 @@ function drawInventory(ctx) {
     }
 }
 
-function drawEvent(ctx) {
+function drawEvent() {
     for(let k in game.events){
         if(k==0){
-            game.events[k].drawDoor(ctx)
+            game.events[k].drawDoor()
         }else{
-            game.events[k].draw(ctx)
+            game.events[k].draw()
         }
     }
 }
 
-function drawActor(ctx) {
+function drawActor() {
     for (let k of game.actors) {
-        k.draw(ctx)
+        k.draw()
     }
 }
 
-function drawText(ctx) {
+function drawText() {
     if (game.status === "talking" || game.status === "talkFinish") {
         ctx.drawImage(
             game.textWindowImage,
@@ -452,7 +452,7 @@ function drawText(ctx) {
     }
 }
 
-function sceneFadeout(ctx) {
+function sceneFadeout() {
     game.opacity -= 1 / fps
     if (game.opacity >= 0) {
         ctx.globalAlpha = game.opacity
