@@ -124,12 +124,14 @@ class Event {
     * @param {number} y eventのy座標
     * @param {image} image eventの画像
     * @param {strings} text eventの持つtext
+    * @param {sound} sound eventの持つsound
     */
-    constructor(x, y, image, text) {
+    constructor(x, y, image, text, sound) {
         this.x = x
         this.y = y
         this.image = image
         this.text = text
+        this.sound = sound
     }
     draw() {
         ctx.drawImage(
@@ -140,12 +142,12 @@ class Event {
             width * 4 / 5
         )
     }
-    drawDoor(){
+    drawDoor() {
         ctx.drawImage(
             this.image,
-            this.x * width+width*3/16,
+            this.x * width + width * 3 / 16,
             this.y * width,
-            width*5/8,
+            width * 5 / 8,
             width
         )
     }
@@ -154,12 +156,24 @@ class Event {
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
         for (let k = 0; k < game.events.length; k++) {
-            let eventXY = [game.events[k].x, game.events[k].y]
-            if (playerXY[0] === eventXY[0] && playerXY[1] === eventXY[1]) {
-                text.talking = game.events[k]
-                game.status = "talking"
+            if (playerXY[0] === game.events[k].x && playerXY[1] === game.events[k].y) {
+                if (game.events[k].sound !== null) {
+                    if (game.events[k].sound === "doorLockedSound") {
+                        // document.getElementById("textSound").play()
+                        document.getElementById("doorLoockedSound").play()
+                        text.nextTalking = game.events[k]
+                        game.status = "waiting"
+                    }
+                } else {
+                    text.talking = game.events[k]
+                    game.status = "talking"
+                }
             }
         }
+    }
+    ring() {
+        text.talking = text.nextTalking;
+        game.status = "talking";
     }
 }
 
@@ -173,9 +187,10 @@ class Game {
         this.event = new Event();
         // scene,moving,reading
         this.status = "moving";
-        this.opacity = 1
+        this.opacity = 1;
         this.talking = null;
-        this.fonts = []
+        this.fonts = [];
+        this.doorLocked = true;
     }
 }
 let game;
@@ -184,32 +199,20 @@ window.onload = function () {
     // ゲーム状態を初期化
     game = new Game();
     setInterval(draw, 1000 / fps);
-
     setBackground()
-    setActors()
-    setEvents()
     setTextWindow()
     setKeyActions()
+
+    setKintoki1()
 }
 
-function setBackground() {
-    game.floorImage = new Image();
-    game.floorImage.src = "./images/background/floor.png";
-    game.wallImage = new Image();
-    game.wallImage.src = "./images/background/wall.png"
-    game.inventoryImage = new Image();
-    game.inventoryImage.src = "./images/background/inventory.png"
-}
-
-function setActors() {
+function setKintoki1(){
     const playerImage = new Image();
     playerImage.src = "./images/actors/kintoki.png";
-    let player = new Actor(3, 2, playerImage);
+    let player = new Actor(4, 4, playerImage);
     game.player = player;
     game.actors.push(player)
-}
 
-function setEvents() {
     // event(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
     const doorImage = new Image()
     doorImage.src = "./images/events/door.png"
@@ -221,10 +224,12 @@ function setEvents() {
         ], [
             "どうしよう、どうしよう……",
             "帰れないと困っちゃうんだけど……！"
-        ]]
+        ]],
+        "doorLockedSound"
     )
     game.events.push(door)
 
+    /*
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
     const ticketBlue = new Event(
@@ -235,9 +240,31 @@ function setEvents() {
         ], [
             "でもどうしてこんなところに",
             "落ちているんだろう……？"
-        ]]
+        ]],
+        null
     );
     game.events.push(ticketBlue)
+    */
+}
+
+function nakamu1(){
+    const playerImage = new Image();
+    playerImage.src =null;
+    let player = new Actor(4, 7, playerImage);
+    game.player = player;
+    game.actors.push(player)
+
+    const feedShelfImage=new Image();
+    feedShelfImage.src=null
+}
+
+function setBackground() {
+    game.floorImage = new Image();
+    game.floorImage.src = "./images/background/floor.png";
+    game.wallImage = new Image();
+    game.wallImage.src = "./images/background/wall.png"
+    game.inventoryImage = new Image();
+    game.inventoryImage.src = "./images/background/inventory.png"
 }
 
 function setTextWindow() {
@@ -282,25 +309,28 @@ function resetText() {
 }
 
 function setKeyActions() {
-    // 移動
     document.addEventListener("keydown", (event) => {
-        if (game.commands.length > 0) return;
-        let move = {
-            KeyA: [-1, 0],
-            KeyW: [0, -1],
-            KeyD: [1, 0],
-            KeyS: [0, 1]
-        };
-        let dxy = move[event.code];
-        if (dxy !== undefined) {
-            game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+        // 移動
+        if(event.code === "KeyA" || event.code === "KeyW" 
+            || event.code === "KeyD" || event.code === "KeyS"){
+            if (game.commands.length > 0) return;
+            let move = {
+                KeyA: [-1, 0],
+                KeyW: [0, -1],
+                KeyD: [1, 0],
+                KeyS: [0, 1]
+            };
+            let dxy = move[event.code];
+            if (dxy !== undefined) {
+                game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+            }
         }
-    });
-    // 取得、進める等
-    document.addEventListener("keydown", (event) => {
+        // 取得、進める等
         if (event.code === "Space") {
             if (game.status === "moving") {
                 game.event.act()
+            } else if (game.status === "waiting") {
+                game.event.ring()
             } else if (game.status === "talkFinish") {
                 resetText()
             } else if (game.status === "talking") {
@@ -316,7 +346,10 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 function draw() {
     moveActor()
+    update()
+}
 
+function update(){
     drawClear()
     drawFloorAndWall()
     drawInventory()
@@ -382,10 +415,10 @@ function drawInventory() {
 }
 
 function drawEvent() {
-    for(let k in game.events){
-        if(k==0){
+    for (let k in game.events) {
+        if (k == 0) {
             game.events[k].drawDoor()
-        }else{
+        } else {
             game.events[k].draw()
         }
     }
@@ -421,7 +454,7 @@ function drawText() {
             text.now = ""
             text.count = 0
         } else if (text.count < text.talking.text[text.m][text.n].length) {
-            document.getElementById("text").play()
+            document.getElementById("textSound").play()
             text.now += text.full[text.count]
             ctx.fillText(
                 text.now,
@@ -473,6 +506,7 @@ function sceneFadeout() {
 }
 
 let text = {
+    nextTalking: null,
     talking: null,
     m: 0,
     n: 0,
@@ -499,11 +533,4 @@ let schedule = {
 function where() {
     text.talking = schedule.whereIsHear
     game.status = "talking"
-}
-
-function door(){
-    /* ドアを開けてから実行するプログラム
-    ・今のactor,eventsを消す
-    ・新しいactor,eventsを作る
-    */
 }
