@@ -206,10 +206,10 @@ window.onload = function () {
     setKintoki1()
 }
 
-function kintoki1(){
+function setKintoki1(){
     const playerImage = new Image();
     playerImage.src = "./images/actors/kintoki.png";
-    let player = new Actor(4, 7, playerImage);
+    let player = new Actor(4, 4, playerImage);
     game.player = player;
     game.actors.push(player)
 
@@ -243,8 +243,8 @@ function kintoki1(){
         ]],
         null
     );
-    */
     game.events.push(ticketBlue)
+    */
 }
 
 function nakamu1(){
