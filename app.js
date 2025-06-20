@@ -123,15 +123,19 @@ class Event {
     * @param {number} x eventのx座標
     * @param {number} y eventのy座標
     * @param {image} image eventの画像
-    * @param {strings} text eventの持つtext
+    * @param {strings} status eventのstatus
+    * @param {strings} text eventの持つtext1,2
     * @param {sound} sound eventの持つsound
     */
-    constructor(x, y, image, text, sound) {
+    constructor(x, y, image, statuses, text, sound) {
+        console.log(statuses)
         this.x = x
         this.y = y
         this.image = image
+        this.statuses=statuses
         this.text = text
         this.sound = sound
+        this.status=0
     }
     draw() {
         ctx.drawImage(
@@ -151,6 +155,36 @@ class Event {
             width
         )
     }
+    search(){
+        let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
+        let dxy = dxyData[game.actors[0].dir]
+        let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
+        for (let k = 0; k < game.events.length; k++) {
+            if (playerXY[0] === game.events[k].x && playerXY[1] === game.events[k].y) {
+                this.act(game.events[k])
+            }
+        }
+    }
+    act(event){
+        if(event.statuses[event.status]==="sound"){
+            if (event.sound === "doorLockedSound") {
+                // document.getElementById("textSound").play()
+                document.getElementById("doorLoockedSound").play()
+                event.status++
+                game.status = "waiting"
+            }
+        }else if(event.statuses[event.status]==="text1"){
+            text.talking=event
+            text.l=0
+            event.status++
+            game.status = "talking"
+        }else if(event.statuses[event.status]==="text2"){
+            text.talking=event
+            text.l=1
+            game.status = "talking"
+        }
+    }
+    /*
     act() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
         let dxy = dxyData[game.actors[0].dir]
@@ -175,6 +209,7 @@ class Event {
         text.talking = text.nextTalking;
         game.status = "talking";
     }
+    */
 }
 
 class Game {
@@ -185,7 +220,12 @@ class Game {
         this.commands = [];
         this.events = [];
         this.event = new Event();
-        // scene,moving,reading
+        /*
+        scene→何もできない
+        moving→移動と行動
+        reading→読む
+        waiting→次行動へ待つ
+        */
         this.status = "moving";
         this.opacity = 1;
         this.talking = null;
@@ -218,33 +258,35 @@ function setKintoki1(){
     doorImage.src = "./images/events/door.png"
     const door = new Event(
         4, 8, doorImage,
-        [[
+        ["sound","text1"],
+        [[[
             "あれ、ドアの鍵が閉まってるみたい",
             "……ってことは、閉じ込められてる？"
         ], [
             "どうしよう、どうしよう……",
             "帰れないと困っちゃうんだけど……！"
-        ]],
+        ]],null],
         "doorLockedSound"
     )
     game.events.push(door)
 
-    /*
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
     const ticketBlue = new Event(
         3, 4, ticketBlueImage,
-        [[
+        ["text1","text2"],
+        [[[
             "青い半券が落ちている",
             "俺が記名したチケットだ"
         ], [
             "でもどうしてこんなところに",
             "落ちているんだろう……？"
-        ]],
+        ]],[[
+            "僕が記入した半券だ"
+        ]]],
         null
     );
     game.events.push(ticketBlue)
-    */
 }
 
 function nakamu1(){
@@ -281,13 +323,14 @@ function setTextWindow() {
 }
 
 function resetText() {
-    if (text.n === text.talking.text[text.m].length - 1) {
-        if (text.m < text.talking.text.length - 1) {
+    if (text.n === text.talking.text[text.l][text.m].length - 1) {
+        if (text.m < text.talking.text[text.l].length - 1) {
             text.m++
             game.status = "talking"
         } else {
             text = {
                 talking: null,
+                l:null,
                 m: 0,
                 n: 0,
                 full: null,
@@ -311,8 +354,8 @@ function resetText() {
 function setKeyActions() {
     document.addEventListener("keydown", (event) => {
         // 移動
-        if(event.code === "KeyA" || event.code === "KeyW" 
-            || event.code === "KeyD" || event.code === "KeyS"){
+        if(game.status==="moving" && (event.code === "KeyA" || event.code === "KeyW" 
+            || event.code === "KeyD" || event.code === "KeyS")){
             if (game.commands.length > 0) return;
             let move = {
                 KeyA: [-1, 0],
@@ -327,15 +370,13 @@ function setKeyActions() {
         }
         // 取得、進める等
         if (event.code === "Space") {
-            if (game.status === "moving") {
-                game.event.act()
-            } else if (game.status === "waiting") {
-                game.event.ring()
+            if (["moving","waiting"].includes(game.status)) { 
+                game.event.search()
+            } else if (game.status === "talking") {
+                text.count = text.talking.text[text.l][text.m][text.n].length
+                text.timer = 0
             } else if (game.status === "talkFinish") {
                 resetText()
-            } else if (game.status === "talking") {
-                text.count = text.talking.text[text.m][text.n].length
-                text.timer = 0
             }
         }
     });
@@ -444,16 +485,16 @@ function drawText() {
         ctx.font = "20px 'dot'";
         for (let k = 0; k < text.n; k++) {
             ctx.fillText(
-                text.talking.text[text.m][k],
+                text.talking.text[text.l][text.m][k],
                 width,
                 (6 + 3 / 4) * width + k * 30
             )
         }
         if (text.full === null) {
-            text.full = text.talking.text[text.m][text.n]
+            text.full = text.talking.text[text.l][text.m][text.n]
             text.now = ""
             text.count = 0
-        } else if (text.count < text.talking.text[text.m][text.n].length) {
+        } else if (text.count < text.talking.text[text.l][text.m][text.n].length) {
             document.getElementById("textSound").play()
             text.now += text.full[text.count]
             ctx.fillText(
@@ -462,7 +503,7 @@ function drawText() {
                 (6 + 3 / 4) * width + text.n * 30
             )
             text.count++
-        } else if (text.count === text.talking.text[text.m][text.n].length) {
+        } else if (text.count === text.talking.text[text.l][text.m][text.n].length) {
             ctx.fillText(
                 text.full,
                 width,
@@ -508,6 +549,7 @@ function sceneFadeout() {
 let text = {
     nextTalking: null,
     talking: null,
+    l:null,
     m: 0,
     n: 0,
     full: null,
