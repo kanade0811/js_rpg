@@ -1,5 +1,24 @@
-・ドアを開ける際のSEを何処に入れるべきか
 ・固定イベントの挿入方法
 ・キャラ変更を綺麗に書く方法
 　→onloadにあるfunctionみたいなのを3つ作るかどうするか
 ・ファビコンの設定→後でやります
+
+
+
+    const chandelierImage=new Image();
+    chandelierImage.src="./images/events/chandelier.png"
+    const chandelier=new Event(
+        4,4,chandelierImage,
+        [[
+            "こんなに大きいシャンデリアを",
+            "見たのは始めてだ"
+        ],[
+            "それにしても、よく落ちてこないな……"
+        ],[
+            "もし仮にでも落ちてきたら……"
+        ],[
+            "いや、怖いことを考えるのはやめよう"
+        ]],[[
+            "大きいシャンデリアがぶら下がっている"
+        ]]
+    )
