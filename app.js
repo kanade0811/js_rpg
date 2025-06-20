@@ -128,23 +128,32 @@ class Event {
     * @param {sound} sound eventの持つsound
     */
     constructor(x, y, image, statuses, text, sound) {
-        console.log(statuses)
         this.x = x
         this.y = y
         this.image = image
-        this.statuses=statuses
+        this.statuses = statuses
         this.text = text
         this.sound = sound
-        this.status=0
+        this.status = 0
     }
     draw() {
-        ctx.drawImage(
-            this.image,
-            this.x * width + width / 10,
-            this.y * width + width / 10,
-            width * 4 / 5,
-            width * 4 / 5
-        )
+        if(this.image!==null){
+            ctx.drawImage(
+                this.image,
+                this.x * width + width / 10,
+                this.y * width + width / 10,
+                width * 4 / 5,
+                width * 4 / 5
+            )
+        }else{
+            ctx.fillStyle="blue"
+            ctx.fillRect(
+                this.x * width + width / 10,
+                this.y * width + width / 10,
+                width * 4 / 5,
+                width * 4 / 5
+            )
+        }
     }
     drawDoor() {
         ctx.drawImage(
@@ -155,7 +164,7 @@ class Event {
             width
         )
     }
-    search(){
+    search() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
@@ -165,51 +174,27 @@ class Event {
             }
         }
     }
-    act(event){
-        if(event.statuses[event.status]==="sound"){
+    act(event) {
+        console.log(event.status)
+        console.log(event.statuses[event.status])
+        if (event.statuses[event.status] === "sound") {
             if (event.sound === "doorLockedSound") {
                 // document.getElementById("textSound").play()
                 document.getElementById("doorLoockedSound").play()
                 event.status++
                 game.status = "waiting"
             }
-        }else if(event.statuses[event.status]==="text1"){
-            text.talking=event
-            text.l=0
+        } else if (event.statuses[event.status] === "text1") {
+            text.talking = event
+            text.l = 0
             event.status++
             game.status = "talking"
-        }else if(event.statuses[event.status]==="text2"){
-            text.talking=event
-            text.l=1
+        } else if (event.statuses[event.status] === "text2") {
+            text.talking = event
+            text.l = 1
             game.status = "talking"
         }
     }
-    /*
-    act() {
-        let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
-        let dxy = dxyData[game.actors[0].dir]
-        let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
-        for (let k = 0; k < game.events.length; k++) {
-            if (playerXY[0] === game.events[k].x && playerXY[1] === game.events[k].y) {
-                if (game.events[k].sound !== null) {
-                    if (game.events[k].sound === "doorLockedSound") {
-                        // document.getElementById("textSound").play()
-                        document.getElementById("doorLoockedSound").play()
-                        text.nextTalking = game.events[k]
-                        game.status = "waiting"
-                    }
-                } else {
-                    text.talking = game.events[k]
-                    game.status = "talking"
-                }
-            }
-        }
-    }
-    ring() {
-        text.talking = text.nextTalking;
-        game.status = "talking";
-    }
-    */
 }
 
 class Game {
@@ -246,7 +231,7 @@ window.onload = function () {
     setKintoki1()
 }
 
-function setKintoki1(){
+function setKintoki1() {
     const playerImage = new Image();
     playerImage.src = "./images/actors/kintoki.png";
     let player = new Actor(4, 4, playerImage);
@@ -258,46 +243,53 @@ function setKintoki1(){
     doorImage.src = "./images/events/door.png"
     const door = new Event(
         4, 8, doorImage,
-        ["sound","text1"],
+        ["sound", "text1","text2"],
         [[[
             "あれ、ドアの鍵が閉まってるみたい",
             "……ってことは、閉じ込められてる？"
         ], [
             "どうしよう、どうしよう……",
             "帰れないと困っちゃうんだけど……！"
-        ]],null],
+        ]], [[
+            "開かないドアだ"
+        ]]],
         "doorLockedSound"
     )
     game.events.push(door)
 
-    const ticketBlueImage = new Image()
-    ticketBlueImage.src = "./images/events/ticketBlue.png"
-    const ticketBlue = new Event(
-        3, 4, ticketBlueImage,
-        ["text1","text2"],
+    const chandelierImage = null
+    const chandelier = new Event(
+        4, 3, chandelierImage,
+        ["text1", "text2"],
         [[[
-            "青い半券が落ちている",
-            "俺が記名したチケットだ"
+            "こんなに大きいシャンデリアを",
+            "見たのは始めてだ"
         ], [
-            "でもどうしてこんなところに",
-            "落ちているんだろう……？"
-        ]],[[
-            "僕が記入した半券だ"
-        ]]],
-        null
-    );
-    game.events.push(ticketBlue)
+            "それにしても、よく落ちてこないな……"
+        ], [
+            "もし仮にでも落ちてきたら……"
+        ], [
+            "いや、怖いことを考えるのはやめよう"
+        ]], [[
+            "大きいシャンデリアがぶら下がっている"
+        ]]]
+    )
+    game.events.push(chandelier)
 }
 
-function nakamu1(){
+function nakamu1() {
     const playerImage = new Image();
-    playerImage.src =null;
+    playerImage.src = null;
     let player = new Actor(4, 7, playerImage);
     game.player = player;
     game.actors.push(player)
 
-    const feedShelfImage=new Image();
-    feedShelfImage.src=null
+    const feedShelfImage = new Image();
+    feedShelfImage.src = null;
+    const feedShelf=new Event(
+        6,1,feedShelfImage,null
+    )
+
 }
 
 function setBackground() {
@@ -330,7 +322,7 @@ function resetText() {
         } else {
             text = {
                 talking: null,
-                l:null,
+                l: null,
                 m: 0,
                 n: 0,
                 full: null,
@@ -354,8 +346,8 @@ function resetText() {
 function setKeyActions() {
     document.addEventListener("keydown", (event) => {
         // 移動
-        if(game.status==="moving" && (event.code === "KeyA" || event.code === "KeyW" 
-            || event.code === "KeyD" || event.code === "KeyS")){
+        if (game.status === "moving" && (event.code === "KeyA" || event.code === "KeyW"
+            || event.code === "KeyD" || event.code === "KeyS")) {
             if (game.commands.length > 0) return;
             let move = {
                 KeyA: [-1, 0],
@@ -370,7 +362,7 @@ function setKeyActions() {
         }
         // 取得、進める等
         if (event.code === "Space") {
-            if (["moving","waiting"].includes(game.status)) { 
+            if (["moving", "waiting"].includes(game.status)) {
                 game.event.search()
             } else if (game.status === "talking") {
                 text.count = text.talking.text[text.l][text.m][text.n].length
@@ -390,7 +382,7 @@ function draw() {
     update()
 }
 
-function update(){
+function update() {
     drawClear()
     drawFloorAndWall()
     drawInventory()
@@ -456,8 +448,8 @@ function drawInventory() {
 }
 
 function drawEvent() {
-    for (let k in game.events) {
-        if (k == 0) {
+    for (let k=0;k<game.events.length;k++) {
+        if (k === 0) {
             game.events[k].drawDoor()
         } else {
             game.events[k].draw()
@@ -540,7 +532,6 @@ function sceneFadeout() {
         ctx.globalAlpha = 1
     } else {
         game.opacity = 1
-        console.log("finish fadeout")
         game.status = "talking"
         where()
     }
@@ -549,7 +540,7 @@ function sceneFadeout() {
 let text = {
     nextTalking: null,
     talking: null,
-    l:null,
+    l: null,
     m: 0,
     n: 0,
     full: null,
