@@ -175,9 +175,8 @@ class Event {
         }
     }
     act(event) {
-        console.log(event.status)
-        console.log(event.statuses[event.status])
         if (event.statuses[event.status] === "sound") {
+            // 音ごとに再生するものをifで決める←対処法あれば直したいね……
             if (event.sound === "doorLockedSound") {
                 // document.getElementById("textSound").play()
                 document.getElementById("doorLoockedSound").play()
@@ -200,22 +199,28 @@ class Event {
 class Game {
     constructor() {
         this.map = new Map();
+        this.event = new Event();
         this.player = null;
         this.actors = [];
         this.commands = [];
         this.events = [];
-        this.event = new Event();
         /*
         scene→何もできない
         moving→移動と行動
         reading→読む
         waiting→次行動へ待つ
         */
-        this.status = "moving";
+        this.status = "scene";
         this.opacity = 1;
         this.talking = null;
         this.fonts = [];
         this.doorLocked = true;
+    }
+    set(){
+        this.player = null;
+        this.actors = [];
+        this.commands = [];
+        this.events = [];
     }
 }
 let game;
@@ -238,7 +243,7 @@ function setKintoki1() {
     game.player = player;
     game.actors.push(player)
 
-    // event(x,y,image,text[テキスト全体][窓ごとのテキスト][各行の文章])
+    // event(x,y,image,events,text[テキスト全体][窓ごとのテキスト][各行の文章],sound)
     const doorImage = new Image()
     doorImage.src = "./images/events/door.png"
     const door = new Event(
@@ -257,7 +262,8 @@ function setKintoki1() {
     )
     game.events.push(door)
 
-    const chandelierImage = null
+    const chandelierImage = new Image()
+    chandelierImage.src="./images/events/chandelier.png"
     const chandelier = new Event(
         4, 3, chandelierImage,
         ["text1", "text2"],
@@ -275,9 +281,30 @@ function setKintoki1() {
         ]]]
     )
     game.events.push(chandelier)
+
+    const ticketBlueImage = new Image()
+    ticketBlueImage.src = "./images/events/ticketBlue.png"
+    const ticketBlue = new Event(
+        3, 5, ticketBlueImage,
+        ["text1","text2"],
+        [[[
+            "青い半券が落ちている",
+            "俺が記名したチケットだ"
+        ], [
+            "でもどうしてこんなところに",
+            "落ちているんだろう……？"
+        ]],[[
+            "僕が記入した半券だ"
+        ]]],
+        null
+    );
+    game.events.push(ticketBlue)
 }
 
 function nakamu1() {
+    game.set()
+
+    // playerを追加
     const playerImage = new Image();
     playerImage.src = null;
     let player = new Actor(4, 7, playerImage);
@@ -285,9 +312,24 @@ function nakamu1() {
     game.actors.push(player)
 
     const feedShelfImage = new Image();
-    feedShelfImage.src = null;
+    feedShelfImage.src = "./images/events/feedShelf.png";
     const feedShelf=new Event(
-        6,1,feedShelfImage,null
+        6,1,feedShelfImage,
+        ["text1","play","text2"],
+        [[[
+            "食べ物がいっぱいあるみたい",
+            "人参、リンゴ、肉に魚……"
+        ],[
+            "料理の材料にしては、",
+            "変なのばっかりだなぁ"
+        ],[
+            "もしかしたら動物たちの",
+            "餌なのかもしれない！",
+        ],[
+            "餌だけでこんなにいっぱいあるなら",
+            "きっともっといっぱいの",
+            "動物がいるんだろうなぁ"
+        ]]]
     )
 
 }
@@ -533,7 +575,7 @@ function sceneFadeout() {
     } else {
         game.opacity = 1
         game.status = "talking"
-        where()
+        kn1()
     }
 }
 
@@ -550,8 +592,8 @@ let text = {
 }
 
 let schedule = {
-    whereIsHear: {
-        text: [[
+    kn1: {
+        text: [[[
             "あれ、俺、なんでこんなところに……？",
             "確か、DAYDREAM CIRCUSって名前の",
             "移動式サーカスのチケットを貰って……"
@@ -559,11 +601,15 @@ let schedule = {
             "……ここにいる理由が思い出せないなぁ"
         ], [
             "もうそろそろ帰りたいんだけど……？"
-        ]]
+        ]],[[]]]
+    },
+    nk1:{
+        text:"a"
     }
 }
 
-function where() {
-    text.talking = schedule.whereIsHear
+function kn1() {
+    text.talking = schedule.kn1
+    text.l=0
     game.status = "talking"
 }
