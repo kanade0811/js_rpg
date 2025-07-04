@@ -50,13 +50,23 @@ class Actor {
         this.image = image;
     }
     draw() {
-        ctx.drawImage(
-            this.image,
-            this.x * width,
-            this.y * width,
-            width,
-            width
-        )
+        if (this.image !== null) {
+            ctx.drawImage(
+                this.image,
+                this.x * width,
+                this.y * width,
+                width,
+                width
+            )
+        } else {
+            ctx.fillStyle = "red"
+            ctx.fillRect(
+                this.x * width + width / 10,
+                this.y * width + width / 10,
+                width * 4 / 5,
+                width * 4 / 5
+            )
+        }
     }
 }
 
@@ -127,7 +137,7 @@ class Event {
     * @param {strings} text eventの持つtext1,2
     * @param {sound} sound eventの持つsound
     */
-    constructor(x, y, image, statuses, text, sound) {
+    constructor(x, y, image, statuses, text, sound, event) {
         this.x = x
         this.y = y
         this.image = image
@@ -135,9 +145,10 @@ class Event {
         this.text = text
         this.sound = sound
         this.status = 0
+        this.event = event
     }
     draw() {
-        if(this.image!==null){
+        if (this.image !== null) {
             ctx.drawImage(
                 this.image,
                 this.x * width + width / 10,
@@ -145,8 +156,8 @@ class Event {
                 width * 4 / 5,
                 width * 4 / 5
             )
-        }else{
-            ctx.fillStyle="blue"
+        } else {
+            ctx.fillStyle = "blue"
             ctx.fillRect(
                 this.x * width + width / 10,
                 this.y * width + width / 10,
@@ -188,6 +199,9 @@ class Event {
             text.l = 0
             event.status++
             game.status = "talking"
+        } else if (event.statuses[event.status] === "event") {
+            this.event()
+            // 終了したらevent.status++
         } else if (event.statuses[event.status] === "text2") {
             text.talking = event
             text.l = 1
@@ -205,18 +219,24 @@ class Game {
         this.commands = [];
         this.events = [];
         /*
+        setting→キャラやイベントの配置中
         scene→何もできない
         moving→移動と行動
         reading→読む
         waiting→次行動へ待つ
         */
-        this.status = "scene";
+        this.phase = 0
+        this.status = "moving";
         this.opacity = 1;
         this.talking = null;
         this.fonts = [];
-        this.doorLocked = true;
+        this.chapter = 0
+        this.chapters = [
+            kintoki1,
+            nakamu1
+        ]
     }
-    set(){
+    set() {
         this.player = null;
         this.actors = [];
         this.commands = [];
@@ -233,17 +253,18 @@ window.onload = function () {
     setTextWindow()
     setKeyActions()
 
-    setKintoki1()
+    kintoki1()
 }
 
-function setKintoki1() {
-    const playerImage = new Image();
-    playerImage.src = "./images/actors/kintoki.png";
-    let player = new Actor(4, 4, playerImage);
-    game.player = player;
-    game.actors.push(player)
+function kintoki1() {
+    const kintokiImage = new Image();
+    kintokiImage.src = "./images/actors/kintoki.png";
+    let kintoki = new Actor(4, 4, kintokiImage);
+    game.player = kintoki;
+    game.actors.push(kintoki)
 
     // event(x,y,image,events,text[テキスト全体][窓ごとのテキスト][各行の文章],sound)
+    /*
     const doorImage = new Image()
     doorImage.src = "./images/events/door.png"
     const door = new Event(
@@ -258,7 +279,8 @@ function setKintoki1() {
         ]], [[
             "開かないドアだ"
         ]]],
-        "doorLockedSound"
+        "doorLockedSound",
+        null
     )
     game.events.push(door)
 
@@ -278,24 +300,28 @@ function setKintoki1() {
             "いや、怖いことを考えるのはやめよう"
         ]], [[
             "大きいシャンデリアがぶら下がっている"
-        ]]]
+        ]]],
+        null,
+        null
     )
     game.events.push(chandelier)
+    */
 
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
     const ticketBlue = new Event(
-        3, 5, ticketBlueImage,
-        ["text1","text2"],
+        4, 5, ticketBlueImage,
+        ["text1", "text2"],
         [[[
             "青い半券が落ちている",
             "俺が記名したチケットだ"
         ], [
             "でもどうしてこんなところに",
             "落ちているんだろう……？"
-        ]],[[
+        ]], [[
             "僕が記入した半券だ"
         ]]],
+        null,
         null
     );
     game.events.push(ticketBlue)
@@ -305,33 +331,40 @@ function nakamu1() {
     game.set()
 
     // playerを追加
-    const playerImage = new Image();
-    playerImage.src = null;
-    let player = new Actor(4, 7, playerImage);
-    game.player = player;
-    game.actors.push(player)
+    const nakamuImage = new Image();
+    // nakamuImage.src = null;
+    nakamuImage.src = "./images/actors/kintoki.png";
+    let nakamu = new Actor(4, 7, nakamuImage);
+    game.player = nakamu;
+    game.actors.push(nakamu)
 
     const feedShelfImage = new Image();
     feedShelfImage.src = "./images/events/feedShelf.png";
-    const feedShelf=new Event(
-        6,1,feedShelfImage,
-        ["text1","play","text2"],
+    const feedShelf = new Event(
+        6, 1, feedShelfImage,
+        ["text1", "event", "text2"],
         [[[
             "食べ物がいっぱいあるみたい",
             "人参、リンゴ、肉に魚……"
-        ],[
+        ], [
             "料理の材料にしては、",
             "変なのばっかりだなぁ"
-        ],[
+        ], [
             "もしかしたら動物たちの",
             "餌なのかもしれない！",
-        ],[
+        ], [
             "餌だけでこんなにいっぱいあるなら",
             "きっともっといっぱいの",
             "動物がいるんだろうなぁ"
-        ]]]
+        ]], [[
+            "動物たちの餌が入った棚だ"
+        ]]],
+        null,
+        function feed() {
+            console.log("feed event")
+        }
     )
-
+    game.events.push(feedShelf)
 }
 
 function setBackground() {
@@ -388,18 +421,22 @@ function resetText() {
 function setKeyActions() {
     document.addEventListener("keydown", (event) => {
         // 移動
-        if (game.status === "moving" && (event.code === "KeyA" || event.code === "KeyW"
-            || event.code === "KeyD" || event.code === "KeyS")) {
-            if (game.commands.length > 0) return;
-            let move = {
-                KeyA: [-1, 0],
-                KeyW: [0, -1],
-                KeyD: [1, 0],
-                KeyS: [0, 1]
-            };
-            let dxy = move[event.code];
-            if (dxy !== undefined) {
-                game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+        if (game.status === "moving") {
+            if (event.code === "KeyA" || event.code === "KeyW" || event.code === "KeyD" || event.code === "KeyS") {
+                if (game.commands.length > 0) return;
+                let move = {
+                    KeyA: [-1, 0],
+                    KeyW: [0, -1],
+                    KeyD: [1, 0],
+                    KeyS: [0, 1]
+                };
+                let dxy = move[event.code];
+                if (dxy !== undefined) {
+                    game.commands.push(new Move(game.player, dxy[0], dxy[1]));
+                }
+            }
+            if (event.code === "KeyQ") {
+                for (let k of game.events) console.log(k.statuses[k.status])
             }
         }
         // 取得、進める等
@@ -422,6 +459,7 @@ const ctx = canvas.getContext("2d");
 function draw() {
     moveActor()
     update()
+    nextCharacter()
 }
 
 function update() {
@@ -431,8 +469,32 @@ function update() {
     drawEvent()
     drawActor()
     drawText()
-    if (game.status === "scene") {
-        sceneFadeout()
+    if (game.status === "feadout") sceneFadeout()
+    if (game.status === "feadin") sceneFadein()
+}
+
+// 全てのeventsを調べ終わったらシーンとキャラを変更する
+function nextCharacter() {
+    if (game.status === "moving") {
+        if (game.events.length === 0) return
+        for (let k of game.events) {
+            if (k.statuses[k.status] !== "text2") return
+        }
+        game.opacity = 0
+        game.status = "feadin"
+        console.log("finish")
+    }
+    if (game.status === "setting") {
+        ctx.globalAlpha = 1
+        ctx.fillStyle = "black"
+        ctx.fillRect(
+            0, 0,
+            game.map.lenX * width,
+            game.map.lenY * width
+        )
+        game.chapter++
+        game.chapters[game.chapter]()
+        game.status = "feadout"
     }
 }
 
@@ -490,7 +552,7 @@ function drawInventory() {
 }
 
 function drawEvent() {
-    for (let k=0;k<game.events.length;k++) {
+    for (let k = 0; k < game.events.length; k++) {
         if (k === 0) {
             game.events[k].drawDoor()
         } else {
@@ -566,17 +628,34 @@ function sceneFadeout() {
         ctx.globalAlpha = game.opacity
         ctx.fillStyle = "black"
         ctx.fillRect(
-            0,
-            0,
+            0, 0,
             game.map.lenX * width,
             game.map.lenY * width
         )
         ctx.globalAlpha = 1
     } else {
         game.opacity = 1
-        game.status = "talking"
-        kn1()
+        firstTalk()
     }
+}
+
+function sceneFadein() {
+    game.opacity += 1 / fps
+    if (game.opacity < 1) {
+        ctx.globalAlpha = game.opacity
+        ctx.fillStyle = "black"
+        ctx.fillRect(
+            0, 0,
+            game.map.lenX * width,
+            game.map.lenY * width
+        )
+        ctx.globalAlpha = 1
+    } else {
+        game.opacity = 1
+        game.status = "setting"
+        console.log("feadin")
+    }
+
 }
 
 let text = {
@@ -591,8 +670,8 @@ let text = {
     timer: 0
 }
 
-let schedule = {
-    kn1: {
+let schedule = [
+    {
         text: [[[
             "あれ、俺、なんでこんなところに……？",
             "確か、DAYDREAM CIRCUSって名前の",
@@ -601,15 +680,17 @@ let schedule = {
             "……ここにいる理由が思い出せないなぁ"
         ], [
             "もうそろそろ帰りたいんだけど……？"
-        ]],[[]]]
+        ]], [[]]]
     },
-    nk1:{
-        text:"a"
+    {
+        text: [[[
+            "a"
+        ]], [[]]]
     }
-}
+]
 
-function kn1() {
-    text.talking = schedule.kn1
-    text.l=0
+function firstTalk() {
     game.status = "talking"
+    text.talking = schedule[game.chapter]
+    text.l = 0
 }
