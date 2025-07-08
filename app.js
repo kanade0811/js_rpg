@@ -187,6 +187,7 @@ class Event {
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
         for (let k = 0; k < game.events.length; k++) {
+            if(k===null) continue
             if (playerXY[0] === game.events[k].x && playerXY[1] === game.events[k].y) {
                 this.act(game.events[k])
             }
@@ -263,14 +264,14 @@ window.onload = function () {
     kintoki1()
 }
 
+// event(x,y,image,events,text[テキスト全体][窓ごとのテキスト][各行の文章],sound,function)
+
 function kintoki1() {
     const kintokiImage = new Image();
     kintokiImage.src = "./images/actors/kintoki.png";
     let kintoki = new Actor(4, 4, kintokiImage);
     game.player = kintoki;
     game.actors.push(kintoki)
-
-    // event(x,y,image,events,text[テキスト全体][窓ごとのテキスト][各行の文章],sound)
     
     const doorImage = new Image()
     doorImage.src = "./images/events/door.png"
@@ -308,8 +309,7 @@ function kintoki1() {
         ]], [[
             "大きいシャンデリアがぶら下がっている"
         ]]],
-        null,
-        null
+        null,null
     )
     game.events.push(chandelier)
 
@@ -327,8 +327,7 @@ function kintoki1() {
         ]], [[
             "僕が記入した半券だ"
         ]]],
-        null,
-        null
+        null,null
     );
     game.events.push(ticketBlue)
 }
@@ -344,11 +343,13 @@ function nakamu1() {
     game.player = nakamu;
     game.actors.push(nakamu)
 
+    game.events.push(null)
+
     const feedShelfImage = new Image();
     feedShelfImage.src = "./images/events/feedShelf.png";
     const feedShelf = new Event(
         6, 1, feedShelfImage,
-        ["text1", "event", "text2"],
+        ["text1", "text2"],
         [[[
             "食べ物がいっぱいあるみたい",
             "人参、リンゴ、肉に魚……"
@@ -364,6 +365,70 @@ function nakamu1() {
             "動物がいるんだろうなぁ"
         ]], [[
             "動物たちの餌が入った棚だ"
+        ]]],
+        null,null
+    )
+    game.events.push(feedShelf)
+
+    const elephantImage=new Image()
+    elephantImage.src=null
+    const elephant=new Event(
+        4,8,elephantImage,
+        ["text1", "text2"],
+        [[[
+            "出口をゾウが塞いじゃっているみたいだ"
+        ],[
+            "うーん、避けてくれたら嬉しいんだけど……"
+        ],[
+            "でも、重すぎて到底動かせそうにないや"
+        ],[
+            "餌とかあったら、誘導できたりするのかな……？"
+        ],[
+            "……でも、この子の好きなものなんて分からないや"
+        ]],[[
+            "大きなゾウが出口を塞いでいる"
+        ]]],
+        null,null
+    )
+}
+
+function lliad1(){
+    const lliadImage = new Image();
+    lliadImage.src =null;
+    let lliad = new Actor(4, 4, lliadImage);
+    game.player = lliad;
+    game.actors.push(lliad)
+
+    const doorImage = new Image()
+    doorImage.src = "./images/events/door.png"
+    const door = new Event(
+        4, 8, doorImage,
+        ["sound", "text2"],
+        [[[
+            "鍵が締まっているドアだ",
+            "鍵、どこにやったっけな……？"
+        ]], [[
+            "鍵がかかって開かないドアだ"
+        ]]],
+        null,null
+    )
+    game.events.push(door)
+
+    const feedShelfImage = new Image();
+    feedShelfImage.src = "./images/events/feedShelf.png";
+    const feedShelf = new Event(
+        6, 1, feedShelfImage,
+        ["text1", "event", "text2"],
+        [[[
+            "今まで体が覚えていた通りに",
+            "餌やりしていたけど……"
+        ], [
+            "……これを全部整理するとなると",
+            "だいぶ大変だなぁ"
+        ], [
+            "……！よし、頑張んないと！"
+        ]], [[
+            "餌の整理、頑張ったなぁ……！"
         ]]],
         null,
         function feed() {
@@ -559,7 +624,8 @@ function drawInventory() {
 
 function drawEvent() {
     for (let k = 0; k < game.events.length; k++) {
-        if (game.events[k].x === 4 && game.events[k].y === game.map.lenY-1) {
+        if (k===0) {
+            if(game.events[k]===null) continue
             game.events[k].drawDoor()
         } else {
             game.events[k].draw()
