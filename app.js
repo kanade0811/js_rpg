@@ -13,7 +13,7 @@ class Map {
             1, 0, 0, 0, 0, 0, 0, 0, 1,
             1, 0, 0, 0, 0, 0, 0, 0, 1,
             1, 1, 0, 0, 0, 0, 0, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1
+            1, 1, 1, 1, 0, 1, 1, 1, 1
         ];
         // 縦と横の長さ
         this.lenX = 9;
@@ -168,6 +168,13 @@ class Event {
     }
     drawDoor() {
         ctx.drawImage(
+            game.wallImage,
+            this.x * width,
+            this.y * width,
+            width,
+            width
+        )
+        ctx.drawImage(
             this.image,
             this.x * width + width * 3 / 16,
             this.y * width,
@@ -264,7 +271,7 @@ function kintoki1() {
     game.actors.push(kintoki)
 
     // event(x,y,image,events,text[テキスト全体][窓ごとのテキスト][各行の文章],sound)
-    /*
+    
     const doorImage = new Image()
     doorImage.src = "./images/events/door.png"
     const door = new Event(
@@ -305,7 +312,6 @@ function kintoki1() {
         null
     )
     game.events.push(chandelier)
-    */
 
     const ticketBlueImage = new Image()
     ticketBlueImage.src = "./images/events/ticketBlue.png"
@@ -553,7 +559,7 @@ function drawInventory() {
 
 function drawEvent() {
     for (let k = 0; k < game.events.length; k++) {
-        if (k === 0) {
+        if (game.events[k].x === 4 && game.events[k].y === game.map.lenY-1) {
             game.events[k].drawDoor()
         } else {
             game.events[k].draw()
@@ -655,7 +661,6 @@ function sceneFadein() {
         game.status = "setting"
         console.log("feadin")
     }
-
 }
 
 let text = {
