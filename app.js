@@ -187,7 +187,7 @@ class Event {
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
         for (let k = 0; k < game.events.length; k++) {
-            if(k===null) continue
+            if (k === null) continue
             if (playerXY[0] === game.events[k].x && playerXY[1] === game.events[k].y) {
                 this.act(game.events[k])
             }
@@ -208,7 +208,7 @@ class Event {
             event.status++
             game.status = "talking"
         } else if (event.statuses[event.status] === "event") {
-            this.event()
+            event.event()
             // 終了したらevent.status++
         } else if (event.statuses[event.status] === "text2") {
             text.talking = event
@@ -226,14 +226,16 @@ class Game {
         this.actors = [];
         this.commands = [];
         this.events = [];
+        this.phase = 0
         /*
         setting→キャラやイベントの配置中
         scene→何もできない
         moving→移動と行動
         reading→読む
         waiting→次行動へ待つ
+        choosing→選択する際の文章を読み進めている
+        chooseFinish→実際の選択画面
         */
-        this.phase = 0
         this.status = "moving";
         this.opacity = 1;
         this.talking = null;
@@ -241,7 +243,8 @@ class Game {
         this.chapter = 0
         this.chapters = [
             kintoki1,
-            nakamu1
+            nakamu1,
+            lliad1
         ]
     }
     set() {
@@ -261,7 +264,9 @@ window.onload = function () {
     setTextWindow()
     setKeyActions()
 
-    kintoki1()
+    // kintoki1()
+    // テスト用
+    lliad1()
 }
 
 // event(x,y,image,events,text[テキスト全体][窓ごとのテキスト][各行の文章],sound,function)
@@ -272,12 +277,12 @@ function kintoki1() {
     let kintoki = new Actor(4, 4, kintokiImage);
     game.player = kintoki;
     game.actors.push(kintoki)
-    
+
     const doorImage = new Image()
     doorImage.src = "./images/events/door.png"
     const door = new Event(
         4, 8, doorImage,
-        ["sound", "text1","text2"],
+        ["sound", "text1", "text2"],
         [[[
             "あれ、ドアの鍵が閉まってるみたい",
             "……ってことは、閉じ込められてる？"
@@ -293,7 +298,7 @@ function kintoki1() {
     game.events.push(door)
 
     const chandelierImage = new Image()
-    chandelierImage.src="./images/events/chandelier.png"
+    chandelierImage.src = "./images/events/chandelier.png"
     const chandelier = new Event(
         4, 3, chandelierImage,
         ["text1", "text2"],
@@ -309,7 +314,7 @@ function kintoki1() {
         ]], [[
             "大きいシャンデリアがぶら下がっている"
         ]]],
-        null,null
+        null, null
     )
     game.events.push(chandelier)
 
@@ -327,7 +332,7 @@ function kintoki1() {
         ]], [[
             "僕が記入した半券だ"
         ]]],
-        null,null
+        null, null
     );
     game.events.push(ticketBlue)
 }
@@ -337,9 +342,8 @@ function nakamu1() {
 
     // playerを追加
     const nakamuImage = new Image();
-    // nakamuImage.src = null;
-    nakamuImage.src = "./images/actors/kintoki.png";
-    let nakamu = new Actor(4, 7, nakamuImage);
+    nakamuImage.src = null;
+    let nakamu = new Actor(4, 7, null);
     game.player = nakamu;
     game.actors.push(nakamu)
 
@@ -366,36 +370,36 @@ function nakamu1() {
         ]], [[
             "動物たちの餌が入った棚だ"
         ]]],
-        null,null
+        null, null
     )
     game.events.push(feedShelf)
 
-    const elephantImage=new Image()
-    elephantImage.src=null
-    const elephant=new Event(
-        4,8,elephantImage,
+    const elephantImage = new Image()
+    elephantImage.src = null
+    const elephant = new Event(
+        4, 8, elephantImage,
         ["text1", "text2"],
         [[[
             "出口をゾウが塞いじゃっているみたいだ"
-        ],[
+        ], [
             "うーん、避けてくれたら嬉しいんだけど……"
-        ],[
+        ], [
             "でも、重すぎて到底動かせそうにないや"
-        ],[
+        ], [
             "餌とかあったら、誘導できたりするのかな……？"
-        ],[
+        ], [
             "……でも、この子の好きなものなんて分からないや"
-        ]],[[
+        ]], [[
             "大きなゾウが出口を塞いでいる"
         ]]],
-        null,null
+        null, null
     )
 }
 
-function lliad1(){
+function lliad1() {
     const lliadImage = new Image();
-    lliadImage.src =null;
-    let lliad = new Actor(4, 4, lliadImage);
+    lliadImage.src = null;
+    let lliad = new Actor(4, 4, null);
     game.player = lliad;
     game.actors.push(lliad)
 
@@ -410,15 +414,15 @@ function lliad1(){
         ]], [[
             "鍵がかかって開かないドアだ"
         ]]],
-        null,null
+        null, null
     )
     game.events.push(door)
 
     const feedShelfImage = new Image();
     feedShelfImage.src = "./images/events/feedShelf.png";
     const feedShelf = new Event(
-        6, 1, feedShelfImage,
-        ["text1", "event", "text2"],
+        4, 5, feedShelfImage,
+        ["event", "text2"],
         [[[
             "今まで体が覚えていた通りに",
             "餌やりしていたけど……"
@@ -433,6 +437,12 @@ function lliad1(){
         null,
         function feed() {
             console.log("feed event")
+            // テキストを表示→するかどうかの選択→するなら画面遷移
+            text.talking = {
+                text: [[["餌の整理、するかぁ……"]], [[]]]
+            }
+            text.l = 0
+            game.status = "choosing"
         }
     )
     game.events.push(feedShelf)
@@ -454,10 +464,15 @@ function setTextWindow() {
             "url(./fonts/Best10-FONT/BestTen-DOT.otf)"
         )
     )
+    ctx.font = "20px 'dot'"
     game.textWindowImage = new Image();
     game.textWindowImage.src = "./images/background/textWindow.png";
     game.textStarImage = new Image()
     game.textStarImage.src = "./images/background/blueStar.png"
+    game.choiseWindowImage = new Image();
+    game.choiseWindowImage.src = "./images/background/choiseWindow.png";
+    game.cursorImage = new Image();
+    game.cursorImage.src = "./images/background/cursor.png"
 }
 
 function resetText() {
@@ -491,9 +506,9 @@ function resetText() {
 
 function setKeyActions() {
     document.addEventListener("keydown", (event) => {
-        // 移動
-        if (game.status === "moving") {
-            if (event.code === "KeyA" || event.code === "KeyW" || event.code === "KeyD" || event.code === "KeyS") {
+        // WASD→移動、選択画面でのカーソル移動
+        if (["KeyW", "KeyA", "KeyS", "KeyD"].includes(event.code)) {
+            if (game.status === "moving") {
                 if (game.commands.length > 0) return;
                 let move = {
                     KeyA: [-1, 0],
@@ -505,12 +520,13 @@ function setKeyActions() {
                 if (dxy !== undefined) {
                     game.commands.push(new Move(game.player, dxy[0], dxy[1]));
                 }
-            }
-            if (event.code === "KeyQ") {
-                for (let k of game.events) console.log(k.statuses[k.status])
+            } else if (game.status === "chooseFinish") {
+                // 選択肢が2つの場合のみを考える
+                if (event.code === "KeyS" && cursor.y === 0) cursor.y += 1
+                if (event.code === "KeyW" && cursor.y === 1) cursor.y -= 1
             }
         }
-        // 取得、進める等
+        // space→取得、会話等
         if (event.code === "Space") {
             if (["moving", "waiting"].includes(game.status)) {
                 game.event.search()
@@ -519,6 +535,8 @@ function setKeyActions() {
                 text.timer = 0
             } else if (game.status === "talkFinish") {
                 resetText()
+            } else if (game.status === "choosing") {
+                console.log("now choosing")
             }
         }
     });
@@ -618,14 +636,19 @@ function drawInventory() {
             width
         )
         ctx.lineWidth = 2;
-        ctx.strokeRect(x * width + 1, y * width, width - 2, width - 2)
+        ctx.strokeRect(
+            x * width + 1,
+            y * width,
+            width - 2,
+            width - 2
+        )
     }
 }
 
 function drawEvent() {
     for (let k = 0; k < game.events.length; k++) {
-        if (k===0) {
-            if(game.events[k]===null) continue
+        if (k === 0) {
+            if (game.events[k] === null) continue
             game.events[k].drawDoor()
         } else {
             game.events[k].draw()
@@ -640,17 +663,16 @@ function drawActor() {
 }
 
 function drawText() {
-    if (game.status === "talking" || game.status === "talkFinish") {
-        ctx.drawImage(
-            game.textWindowImage,
-            (1 / 4) * width,
-            (5 + 3 / 4) * width,
-            (game.map.lenX - 1 / 2) * width,
-            3 * width
-        )
-
-        ctx.fillStyle = "white"
-        ctx.font = "20px 'dot'";
+    if (!(["talking", "talkFinish", "choosing", "chooseFinish"].includes(game.status))) return
+    ctx.drawImage(
+        game.textWindowImage,
+        (1 / 4) * width,
+        (5 + 3 / 4) * width,
+        (game.map.lenX - 1 / 2) * width,
+        3 * width
+    )
+    ctx.fillStyle = "white"
+    if (game.status === "talking") {
         for (let k = 0; k < text.n; k++) {
             ctx.fillText(
                 text.talking.text[text.l][text.m][k],
@@ -658,36 +680,71 @@ function drawText() {
                 (6 + 3 / 4) * width + k * 30
             )
         }
-        if (text.full === null) {
-            text.full = text.talking.text[text.l][text.m][text.n]
-            text.now = ""
-            text.count = 0
-        } else if (text.count < text.talking.text[text.l][text.m][text.n].length) {
-            document.getElementById("textSound").play()
-            text.now += text.full[text.count]
-            ctx.fillText(
-                text.now,
-                width,
-                (6 + 3 / 4) * width + text.n * 30
-            )
-            text.count++
-        } else if (text.count === text.talking.text[text.l][text.m][text.n].length) {
-            ctx.fillText(
-                text.full,
-                width,
-                (6 + 3 / 4) * width + text.n * 30
-            )
-            if (text.timer == 0) {
-                game.status = "talkFinish"
-            }
-            text.timer++
+    }
+    if (text.full === null) {
+        text.full = text.talking.text[text.l][text.m][text.n]
+        text.now = ""
+        text.count = 0
+    } else if (text.count < text.talking.text[text.l][text.m][text.n].length) {
+        document.getElementById("textSound").play()
+        text.now += text.full[text.count]
+        ctx.fillText(
+            text.now,
+            width,
+            (6 + 3 / 4) * width + text.n * 30
+        )
+        text.count++
+    } else if (text.count === text.talking.text[text.l][text.m][text.n].length) {
+        ctx.fillText(
+            text.full,
+            width,
+            (6 + 3 / 4) * width + text.n * 30
+        )
+        if (game.status === "talking" && text.timer === 0) game.status = "talkFinish"
+        if (game.status === "talkFinish") {
             if (text.timer % fps < fps / 2) {
                 ctx.drawImage(
                     game.textStarImage,
-                    (game.map.lenX - 3 / 2 + 1 / 4) * width,
+                    (game.map.lenX - 5 / 4) * width,
                     (7 + 3 / 4) * width,
                     width / 2,
                     width / 2
+                )
+            }
+        }
+        if (game.status === "choosing" && text.timer === 0) game.status = "chooseFinish"
+        if (game.status === "chooseFinish") {
+            // 現時点ではイリアス1のみ適応
+            if (text.timer == 0) {
+                game.status = "chooseFinish"
+                cursor.y = 0
+            }
+            text.timer++
+            ctx.drawImage(
+                game.choiseWindowImage,
+                6 * width,
+                5 * width,
+                3 * width,
+                2 * width
+            )
+            ctx.fillStyle = "white"
+            ctx.fillText(
+                "やる！",
+                (6 + 7 / 8) * width,
+                (5 + 3 / 4) * width
+            )
+            ctx.fillText(
+                "後で……",
+                (6 + 7 / 8) * width,
+                (6 + 1 / 2) * width
+            )
+            if (text.timer % fps < fps / 2) {
+                ctx.drawImage(
+                    game.cursorImage,
+                    (6 + 1 / 16) * width,
+                    (5 + 1 / 8 + cursor.y * (3 / 4)) * width,
+                    width,
+                    width
                 )
             }
         }
@@ -741,6 +798,10 @@ let text = {
     timer: 0
 }
 
+let cursor = {
+    y: 0
+}
+
 let schedule = [
     {
         text: [[[
@@ -756,6 +817,10 @@ let schedule = [
     {
         text: [[[
             "a"
+        ]], [[]]]
+    }, {
+        text: [[[
+            "b"
         ]], [[]]]
     }
 ]
