@@ -88,8 +88,10 @@ class Move {
                 this.frame = fps;
                 return this.done;
             }
-            for (let k of game.events) {
-                if ((this.endX === k.x) && (this.endY === k.y)) {
+            let target
+            for (let k = (game.events[0] === null ? 1 : 0); k < game.events.length; k++) {
+                target = game.events[k]
+                if ((this.endX === target.x) && (this.endY === target.y)) {
                     this.frame = fps;
                     return this.done;
                 }
@@ -128,50 +130,14 @@ class Event {
         this.status = 0
         this.event = event
     }
-    draw() {
-        if (this.image !== null) {
-            ctx.drawImage(
-                this.image,
-                this.x * width + width / 10,
-                this.y * width + width / 10,
-                width * 4 / 5,
-                width * 4 / 5
-            )
-        } else {
-            ctx.fillStyle = "blue"
-            ctx.fillRect(
-                this.x * width + width / 10,
-                this.y * width + width / 10,
-                width * 4 / 5,
-                width * 4 / 5
-            )
-        }
-    }
-    drawDoor() {
-        ctx.drawImage(
-            game.wallImage,
-            this.x * width,
-            this.y * width,
-            width,
-            width
-        )
-        ctx.drawImage(
-            this.image,
-            this.x * width + width * 3 / 16,
-            this.y * width,
-            width * 5 / 8,
-            width
-        )
-    }
     search() {
         let dxyData = [[1, 0], [0, -1], [-1, 0], [0, 1]]
         let dxy = dxyData[game.actors[0].dir]
         let playerXY = [game.actors[0].x + dxy[0], game.actors[0].y + dxy[1]]
-        for (let k = 0; k < game.events.length; k++) {
-            if (k === null) continue
-            if (playerXY[0] === game.events[k].x && playerXY[1] === game.events[k].y) {
-                this.act(game.events[k])
-            }
+        let target
+        for (let k = (game.events[0] === null ? 1 : 0); k < game.events.length; k++) {
+            target = game.events[k]
+            if (playerXY[0] === target.x && playerXY[1] === target.y) this.act(target)
         }
     }
     act(event) {

@@ -1,6 +1,5 @@
 import { fps, width, ctx } from "./global.js"
 import { Game, setBackground, setTextWindow, setKeyActions } from "./setting.js"
-import { kintoki1, nakamu1, lliad1 } from "./character.js"
 import { draw } from "./draw.js"
 
 export let game;
@@ -15,7 +14,7 @@ window.onload = function () {
 
     // game.chapters[game.chapter]()
     // テスト用
-    lliad1()
+    game.chapters[1]()
 }
 
 function update() {
@@ -28,9 +27,13 @@ function update() {
 function nextCharacter() {
     if (game.status === "moving") {
         if (game.events.length === 0) return
-        for (let k of game.events) {
-            if (k.statuses[k.status] !== "text2") return
+
+        let target
+        for (let k = (game.events[0] === null ? 1 : 0); k < game.events.length; k++) {
+            target = game.events[k]
+            if (target.statuses[target.status] !== "text2") return
         }
+
         game.opacity = 0
         game.status = "feadin"
         console.log("finish")

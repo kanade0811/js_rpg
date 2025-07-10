@@ -86,12 +86,21 @@ function events() {
     for (let k = 1; k < game.events.length; k++) {
         target=game.events[k]
         if (target.image !== null) {
+            /*
             ctx.drawImage(
                 target.image,
                 target.x * width + width / 10,
                 target.y * width + width / 10,
                 width * 4 / 5,
                 width * 4 / 5
+            )
+            */
+            ctx.drawImage(
+                target.image,
+                target.x * width,
+                target.y * width,
+                width,
+                width
             )
         } else {
             ctx.fillStyle = "blue"
