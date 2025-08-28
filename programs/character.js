@@ -83,8 +83,8 @@ function nakamu1() {
     const feedShelfImage = new Image();
     feedShelfImage.src = "./images/events/feedShelf.png";
     const feedShelf = new Event(
-        6, 1, feedShelfImage,
-        ["text1", "text2"],
+        5, 7, feedShelfImage,
+        ["text1","event", "text2"],
         [[[
             "食べ物がいっぱいあるみたい",
             "人参、リンゴ、肉に魚……"
@@ -105,26 +105,30 @@ function nakamu1() {
     )
     game.events.push(feedShelf)
 
-    const elephantImage = new Image()
-    elephantImage.src = null
+    const elephantImage = new Image();
+    elephantImage.src = "./images/events/elephant.png";
     const elephant = new Event(
         4, 8, elephantImage,
         ["text1", "text2"],
         [[[
             "出口をゾウが塞いじゃっているみたいだ"
         ], [
-            "うーん、避けてくれたら嬉しいんだけど……"
+            "うーん、避けてくれたら",
+            "嬉しいんだけど……"
         ], [
             "でも、重すぎて到底動かせそうにないや"
         ], [
-            "餌とかあったら、誘導できたりするのかな……？"
+            "餌とかあったら、",
+            "誘導できたりするのかな……？"
         ], [
-            "……でも、この子の好きなものなんて分からないや"
+            "……でも、この子の",
+            "好きなものなんて分からないや"
         ]], [[
             "大きなゾウが出口を塞いでいる"
         ]]],
         null, null
     )
+    game.events.push(elephant);
 }
 
 function lliad1() {
